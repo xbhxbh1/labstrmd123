@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 using StudentCabinetMVVM.Models;
 
 namespace StudentCabinetMVVM.Services;
@@ -9,9 +10,27 @@ public class HttpAuthApi : IAuthApi
 {
     private readonly HttpClient _http;
 
-    public HttpAuthApi()
+    public HttpAuthApi(ILogger<HttpAuthApi> logger)
     {
-        _http = new HttpClient
+        // Усі запити автентифікації йдуть через обробник, що перевіряє закріплений сертифікат
+        var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) =>
+            {
+                // Довіряємо лише сертифікату із закріпленим відбитком; ланцюжок довіри ОС не враховуємо,
+                // бо тестовий сертифікат самопідписаний.
+                if (CertificatePinValidator.IsPinned(certificate, ApiConfig.PinnedCertificateSha256))
+                    return true;
+
+                logger.LogError(
+                    "Сертифікат сервера не збігається із закріпленим: очікувано {Expected}, отримано {Actual}",
+                    CertificatePinValidator.Normalize(ApiConfig.PinnedCertificateSha256),
+                    certificate is null ? "(немає сертифіката)" : CertificatePinValidator.ComputePin(certificate));
+                return false;
+            }
+        };
+
+        _http = new HttpClient(handler)
         {
             BaseAddress = new Uri(ApiConfig.AuthBaseUrl),
             Timeout = TimeSpan.FromSeconds(10)

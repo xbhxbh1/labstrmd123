@@ -25,6 +25,11 @@ public class AuthService : IAuthService
         {
             token = await _api.AuthenticateAsync(login, password);
         }
+        catch (Exception ex) when (IsCertificateProblem(ex))
+        {
+            _logger.LogError(ex, "Сертифікат сервера автентифікації не пройшов перевірку закріплення");
+            return AuthResult.Fail("Не вдалося перевірити сертифікат сервера. З'єднання відхилено: можлива атака «людина посередині».");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Помилка звернення до сервера автентифікації");
@@ -57,6 +62,10 @@ public class AuthService : IAuthService
         _logger.LogInformation("Успішний вхід: {User}, роль {Role}", claims.UserName, claims.Role);
         return AuthResult.Ok();
     }
+
+    private static bool IsCertificateProblem(Exception ex) =>
+        ex is HttpRequestException { HttpRequestError: HttpRequestError.SecureConnectionError }
+        || ex.InnerException is System.Security.Authentication.AuthenticationException;
 
     public async Task<string?> GetTokenAsync()
     {
