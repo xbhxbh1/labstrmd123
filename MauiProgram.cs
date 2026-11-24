@@ -36,6 +36,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISyncService, SyncService>();
         builder.Services.AddSingleton<ILogFileReader, LogFileReader>();
         builder.Services.AddSingleton<ICrashReporter, SentryCrashReporter>();
+        builder.Services.AddSingleton<IMediaPicker>(MediaPicker.Default);
+        builder.Services.AddSingleton<IGeolocation>(Geolocation.Default);
+        builder.Services.AddSingleton<IAccelerometer>(Accelerometer.Default);
+        builder.Services.AddSingleton<IConnectivity>(Connectivity.Current);
+        builder.Services.AddSingleton<IPermissionService, PermissionService>();
         builder.Services.AddSingleton<ISessionService, SessionService>();
         builder.Services.AddSingleton<IAuthApi, HttpAuthApi>();
         builder.Services.AddSingleton<IAuthService, AuthService>();

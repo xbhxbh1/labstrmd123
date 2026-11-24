@@ -48,6 +48,9 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
+    <!-- Лабораторна робота 7: камера (фото дефекту) і геолокація (місце огляду) -->
+    <DeviceCapability Name="webcam" />
+    <DeviceCapability Name="location" />
   </Capabilities>
 
 </Package>
