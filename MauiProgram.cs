@@ -33,6 +33,7 @@ public static class MauiProgram
         builder.Services.AddSingleton(new AppDatabase(dbPath));
         builder.Services.AddSingleton<IEncryptionService, AesEncryptionService>();
         builder.Services.AddSingleton<IStudentRepository, StudentRepository>();
+        builder.Services.AddSingleton<IInspectionRepository, InspectionRepository>();
         builder.Services.AddSingleton<ISyncService, SyncService>();
         builder.Services.AddSingleton<ILogFileReader, LogFileReader>();
         builder.Services.AddSingleton<ICrashReporter, SentryCrashReporter>();

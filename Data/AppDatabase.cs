@@ -26,6 +26,7 @@ public class AppDatabase
                 var connection = new SQLiteAsyncConnection(_path);
                 await connection.CreateTableAsync<StudentRecord>();
                 await connection.CreateTableAsync<SyncQueueItem>();
+                await connection.CreateTableAsync<RoomInspectionRecord>();
                 _connection = connection;
             }
 
