@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FuelErp.Views.InspectionEditPage"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="12">
+
+            <Label Text="{Binding Title}"
+                   FontSize="22"
+                   FontAttributes="Bold" />
+
+            <Entry Placeholder="Номер аудиторії"
+                   Text="{Binding RoomNumber, Mode=TwoWay}"
+                   AutomationId="RoomNumberEntry" />
+
+            <Editor Placeholder="Опис дефекту"
+                    Text="{Binding Description, Mode=TwoWay}"
+                    HeightRequest="110"
+                    AutomationId="DescriptionEditor" />
+
+            <Image Source="{Binding PhotoPath}"
+                   IsVisible="{Binding HasPhoto}"
+                   HeightRequest="180"
+                   Aspect="AspectFit"
+                   AutomationId="PhotoPreview" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Зробити фото"
+                        Command="{Binding TakePhotoCommand}"
+                        AutomationId="TakePhotoButton" />
+                <Button Text="З галереї"
+                        Command="{Binding PickPhotoCommand}"
+                        AutomationId="PickPhotoButton" />
+            </HorizontalStackLayout>
+
+            <Label Text="{Binding LocationText}"
+                   AutomationId="LocationLabel" />
+
+            <Button Text="Визначити місцеперебування"
+                    Command="{Binding GetLocationCommand}"
+                    AutomationId="GetLocationButton" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Зберегти"
+                        Command="{Binding SaveCommand}"
+                        AutomationId="SaveInspectionButton" />
+                <Button Text="Скасувати"
+                        Command="{Binding CancelCommand}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

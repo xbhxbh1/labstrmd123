@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FuelErp.Views.LoginPage"
+             Shell.NavBarIsVisible="False"
+             Title="Вхід">
+
+    <VerticalStackLayout Padding="32"
+                         Spacing="14"
+                         VerticalOptions="Center"
+                         WidthRequest="420">
+
+        <Label Text="Особистий кабінет студента"
+               FontSize="26"
+               FontAttributes="Bold"
+               HorizontalOptions="Center" />
+
+        <Label Text="Вхід до системи"
+               FontSize="16"
+               HorizontalOptions="Center" />
+
+        <Entry Placeholder="Логін"
+               Text="{Binding Login, Mode=TwoWay}"
+               AutomationId="LoginEntry" />
+
+        <Entry Placeholder="Пароль"
+               IsPassword="True"
+               Text="{Binding Password, Mode=TwoWay}"
+               ReturnCommand="{Binding LoginCommand}"
+               AutomationId="PasswordEntry" />
+
+        <Label Text="{Binding ErrorMessage}"
+               TextColor="Red"
+               IsVisible="{Binding HasError}"
+               AutomationId="LoginErrorLabel" />
+
+        <Button Text="Увійти"
+                Command="{Binding LoginCommand}"
+                AutomationId="LoginButton" />
+
+        <Button Text="Увійти через Windows Hello"
+                Command="{Binding BiometricLoginCommand}"
+                IsVisible="{Binding CanUseBiometrics}"
+                AutomationId="BiometricLoginButton" />
+
+        <Label Text="{Binding BiometricHint}"
+               FontSize="12"
+               TextColor="Gray"
+               IsVisible="{Binding HasBiometricHint}"
+               AutomationId="BiometricHintLabel" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}" />
+    </VerticalStackLayout>
+</ContentPage>

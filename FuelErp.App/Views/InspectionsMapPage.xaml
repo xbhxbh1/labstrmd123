@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+             xmlns:vm="clr-namespace:FuelErp.ViewModels;assembly=FuelErp.Core"
+             xmlns:conv="clr-namespace:FuelErp.Converters"
+             x:Class="FuelErp.Views.InspectionsMapPage"
+             Title="Карта актів огляду">
+
+    <ContentPage.Resources>
+        <conv:PinLocationConverter x:Key="PinLocationConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="8" RowSpacing="8">
+
+        <Label Grid.Row="0"
+               Text="{Binding Status}"
+               AutomationId="MapStatusLabel" />
+
+        <!-- Маркери прив'язуються до колекції ViewModel, а не додаються в Pins із code-behind -->
+        <maps:Map Grid.Row="1"
+                  ItemsSource="{Binding Pins}"
+                  IsShowingUser="True"
+                  AutomationId="InspectionsMap">
+            <maps:Map.ItemTemplate>
+                <DataTemplate x:DataType="vm:InspectionPinItem">
+                    <maps:Pin Location="{Binding ., Converter={StaticResource PinLocationConverter}}"
+                              Label="{Binding RoomNumber}"
+                              Address="{Binding Description}" />
+                </DataTemplate>
+            </maps:Map.ItemTemplate>
+        </maps:Map>
+
+        <Button Grid.Row="2"
+                Text="Назад"
+                Command="{Binding GoBackCommand}" />
+    </Grid>
+</ContentPage>

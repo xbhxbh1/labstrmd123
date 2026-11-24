@@ -15,7 +15,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Unit and integration tests with code coverage
-        run: dotnet test StudentCabinet.Core.Tests --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        run: dotnet test FuelErp.Core.Tests --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
       - name: HTML coverage report
         run: |
@@ -32,7 +32,7 @@ jobs:
           covered = total = 0
           for path in glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True):
               for cls in ET.parse(path).getroot().iter("class"):
-                  if not cls.get("name").startswith("StudentCabinetMVVM.ViewModels."):
+                  if not cls.get("name").startswith("FuelErp.ViewModels."):
                       continue
                   lines = cls.find("lines")
                   if lines is None:
@@ -70,4 +70,4 @@ jobs:
         run: dotnet workload install maui-android
 
       - name: Build the Android version
-        run: dotnet build StudentCabinet.App/StudentCabinet.App.csproj -f net8.0-android -c Release -p:IncludeAndroid=true
+        run: dotnet build FuelErp.App/FuelErp.App.csproj -f net8.0-android -c Release -p:IncludeAndroid=true

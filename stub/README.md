@@ -14,13 +14,13 @@
 ## Запуск
 
 ```powershell
-dotnet run --project stub/StudentCabinet.StubApi
+dotnet run --project stub/FuelErp.StubApi
 ```
 
 Імітація атаки «людина посередині» (сервер показує сертифікат, якого застосунок не очікує):
 
 ```powershell
-dotnet run --project stub/StudentCabinet.StubApi -- --rogue
+dotnet run --project stub/FuelErp.StubApi -- --rogue
 ```
 
 ## Сертифікат
