@@ -47,6 +47,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPermissionService, PermissionService>();
         builder.Services.AddSingleton<IPhotoService, PhotoService>();
         builder.Services.AddSingleton<IDeviceLocationService, DeviceLocationService>();
+        builder.Services.AddSingleton<IShakeDetectionService, ShakeDetectionService>();
         builder.Services.AddSingleton<ISessionService, SessionService>();
         builder.Services.AddSingleton<IAuthApi, HttpAuthApi>();
         builder.Services.AddSingleton<IAuthService, AuthService>();

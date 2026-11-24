@@ -10,11 +10,20 @@ public partial class InspectionsPage : ContentPage
         BindingContext = viewModel;
     }
 
-    protected override void OnAppearing()
+    // Сенсор і підписки на події стартують, коли сторінка з'являється, і зупиняються, коли вона зникає
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
 
         if (BindingContext is InspectionsViewModel vm)
-            vm.LoadCommand.Execute(null);
+            await vm.OnAppearingAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        if (BindingContext is InspectionsViewModel vm)
+            vm.OnDisappearing();
     }
 }

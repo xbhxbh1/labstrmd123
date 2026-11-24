@@ -5,9 +5,26 @@
              x:Name="InspectionsRoot"
              Title="Акти огляду аудиторій">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
 
-        <FlexLayout Grid.Row="0" Wrap="Wrap" AlignItems="Center">
+        <!-- Індикатор стану мережі (IConnectivity) і розмір черги офлайн-змін -->
+        <HorizontalStackLayout Grid.Row="0" Spacing="16">
+            <Label Text="{Binding NetworkText}"
+                   TextColor="Green"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   AutomationId="NetworkIndicator">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding IsOnline}" Value="False">
+                        <Setter Property="TextColor" Value="OrangeRed" />
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+            <Label Text="{Binding PendingText}"
+                   VerticalOptions="Center" />
+        </HorizontalStackLayout>
+
+        <FlexLayout Grid.Row="1" Wrap="Wrap" AlignItems="Center">
             <Button Text="Новий акт"
                     Command="{Binding NewInspectionCommand}"
                     AutomationId="NewInspectionButton"
@@ -16,13 +33,18 @@
                     Command="{Binding OpenMapCommand}"
                     AutomationId="OpenMapButton"
                     Margin="0,0,8,6" />
+            <Button Text="Імітувати струшування"
+                    Command="{Binding SimulateShakeCommand}"
+                    IsVisible="{Binding ShowShakeSimulation}"
+                    AutomationId="SimulateShakeButton"
+                    Margin="0,0,8,6" />
         </FlexLayout>
 
-        <Label Grid.Row="1"
+        <Label Grid.Row="2"
                Text="{Binding Status}"
                AutomationId="InspectionsStatusLabel" />
 
-        <CollectionView Grid.Row="2"
+        <CollectionView Grid.Row="3"
                         ItemsSource="{Binding Inspections}"
                         AutomationId="InspectionsCollection">
             <CollectionView.ItemTemplate>

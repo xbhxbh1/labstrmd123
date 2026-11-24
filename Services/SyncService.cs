@@ -8,6 +8,7 @@ namespace StudentCabinetMVVM.Services;
 public class SyncService : ISyncService
 {
     private readonly AppDatabase _database;
+    private readonly IConnectivity _connectivity;
     private readonly ILogger<SyncService> _logger;
     private readonly SemaphoreSlim _syncLock = new(1, 1);
     private readonly HttpClient _http = new()
@@ -18,11 +19,21 @@ public class SyncService : ISyncService
 
     public event EventHandler? QueueChanged;
 
-    public SyncService(AppDatabase database, ILogger<SyncService> logger)
+    public SyncService(AppDatabase database, IConnectivity connectivity, ILogger<SyncService> logger)
     {
         _database = database;
+        _connectivity = connectivity;
         _logger = logger;
-        Connectivity.Current.ConnectivityChanged += async (_, _) => await SyncAsync();
+
+        // автоматична синхронізація черги офлайн-змін, коли з'являється мережа
+        _connectivity.ConnectivityChanged += async (_, e) =>
+        {
+            if (e.NetworkAccess == NetworkAccess.Internet)
+            {
+                _logger.LogInformation("З'явилась мережа: запуск автоматичної синхронізації");
+                await SyncAsync();
+            }
+        };
     }
 
     public async Task<int> GetPendingCountAsync()
@@ -33,7 +44,7 @@ public class SyncService : ISyncService
 
     public async Task<int> SyncAsync()
     {
-        if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+        if (_connectivity.NetworkAccess != NetworkAccess.Internet)
         {
             _logger.LogWarning("Немає мережі: зміни залишаються в черзі синхронізації");
             return 0;

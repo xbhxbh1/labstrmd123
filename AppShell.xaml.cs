@@ -15,5 +15,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("inspection/new", typeof(InspectionEditPage));
         Routing.RegisterRoute("inspection/detail", typeof(InspectionDetailPage));
         Routing.RegisterRoute("inspections/map", typeof(InspectionsMapPage));
+        Routing.RegisterRoute("incident/new", typeof(InspectionEditPage));
     }
 }
