@@ -5,3 +5,7 @@ obj/
 # Visual Studio user-specific files
 *.user
 
+
+# Test and coverage output
+TestResults/
+CoverageReport/

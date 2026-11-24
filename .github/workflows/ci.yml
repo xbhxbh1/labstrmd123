@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Unit and integration tests with code coverage
+        run: dotnet test StudentCabinet.Core.Tests --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: HTML coverage report
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+          reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport" -reporttypes:"Html;TextSummary"
+          cat ./CoverageReport/Summary.txt
+
+      - name: Check that ViewModel coverage is at least 60 percent
+        run: |
+          python3 - <<'PY'
+          import glob, sys
+          import xml.etree.ElementTree as ET
+
+          covered = total = 0
+          for path in glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True):
+              for cls in ET.parse(path).getroot().iter("class"):
+                  if not cls.get("name").startswith("StudentCabinetMVVM.ViewModels."):
+                      continue
+                  lines = cls.find("lines")
+                  if lines is None:
+                      continue
+                  for line in lines.findall("line"):
+                      total += 1
+                      covered += 1 if int(line.get("hits")) > 0 else 0
+
+          rate = 100.0 * covered / total if total else 0.0
+          print(f"ViewModels line coverage: {covered}/{total} = {rate:.1f}%")
+          sys.exit(0 if rate >= 60.0 else 1)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: '**/coverage.cobertura.xml'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: CoverageReport
+
+  build-android:
+    runs-on: windows-latest
+    needs: test-core
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install the MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Build the Android version
+        run: dotnet build StudentCabinet.App/StudentCabinet.App.csproj -f net8.0-android -c Release -p:IncludeAndroid=true
