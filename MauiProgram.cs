@@ -41,7 +41,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IGeolocation>(Geolocation.Default);
         builder.Services.AddSingleton<IAccelerometer>(Accelerometer.Default);
         builder.Services.AddSingleton<IConnectivity>(Connectivity.Current);
+        builder.Services.AddSingleton<IMap>(Microsoft.Maui.ApplicationModel.Map.Default);
         builder.Services.AddSingleton<IPermissionService, PermissionService>();
+        builder.Services.AddSingleton<IPhotoService, PhotoService>();
+        builder.Services.AddSingleton<IDeviceLocationService, DeviceLocationService>();
         builder.Services.AddSingleton<ISessionService, SessionService>();
         builder.Services.AddSingleton<IAuthApi, HttpAuthApi>();
         builder.Services.AddSingleton<IAuthService, AuthService>();
@@ -57,6 +60,12 @@ public static class MauiProgram
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<UsersViewModel>();
         builder.Services.AddTransient<UsersPage>();
+        builder.Services.AddTransient<InspectionsViewModel>();
+        builder.Services.AddTransient<InspectionsPage>();
+        builder.Services.AddTransient<InspectionEditViewModel>();
+        builder.Services.AddTransient<InspectionEditPage>();
+        builder.Services.AddTransient<InspectionDetailViewModel>();
+        builder.Services.AddTransient<InspectionDetailPage>();
         builder.Services.AddTransient<LogsViewModel>();
         builder.Services.AddTransient<LogsPage>();
 

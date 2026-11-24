@@ -113,6 +113,8 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
 
     public ICommand LogoutCommand { get; }
 
+    public ICommand OpenInspectionsCommand { get; }
+
     public StudentViewModel(
         IAppStateService state,
         IStudentRepository repository,
@@ -139,6 +141,7 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
         SyncCommand = new Command(async () => await SyncNowAsync());
         OpenUsersCommand = new Command(async () => await OpenUsersAsync());
         LogoutCommand = new Command(async () => await LogoutAsync());
+        OpenInspectionsCommand = new Command(async () => await Shell.Current.GoToAsync("inspections"));
 
         _session.SessionChanged += (_, _) =>
         {
