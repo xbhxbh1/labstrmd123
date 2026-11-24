@@ -11,11 +11,13 @@ namespace StudentCabinetMVVM.ViewModels;
 public partial class InspectionsViewModel : ObservableObject
 {
     private readonly IInspectionRepository _repository;
-    private readonly IMap _map;
-    private readonly IDeviceInfo _deviceInfo;
-    private readonly IConnectivity _connectivity;
+    private readonly IMapLauncher _map;
+    private readonly INetworkStatusService _network;
     private readonly ISyncService _sync;
     private readonly IShakeDetectionService _shake;
+    private readonly INavigationService _navigation;
+    private readonly IDialogService _dialogs;
+    private readonly IMainThreadService _mainThread;
     private readonly ILogger<InspectionsViewModel> _logger;
 
     public ObservableCollection<RoomInspection> Inspections { get; } = new();
@@ -40,19 +42,23 @@ public partial class InspectionsViewModel : ObservableObject
 
     public InspectionsViewModel(
         IInspectionRepository repository,
-        IMap map,
-        IDeviceInfo deviceInfo,
-        IConnectivity connectivity,
+        IMapLauncher map,
+        INetworkStatusService network,
         ISyncService sync,
         IShakeDetectionService shake,
+        INavigationService navigation,
+        IDialogService dialogs,
+        IMainThreadService mainThread,
         ILogger<InspectionsViewModel> logger)
     {
         _repository = repository;
         _map = map;
-        _deviceInfo = deviceInfo;
-        _connectivity = connectivity;
+        _network = network;
         _sync = sync;
         _shake = shake;
+        _navigation = navigation;
+        _dialogs = dialogs;
+        _mainThread = mainThread;
         _logger = logger;
     }
 
@@ -60,9 +66,9 @@ public partial class InspectionsViewModel : ObservableObject
     // інакше акселерометр і далі споживав би заряд батареї, коли сторінку вже закрито
     public async Task OnAppearingAsync()
     {
-        IsOnline = _connectivity.NetworkAccess == NetworkAccess.Internet;
+        IsOnline = _network.IsOnline;
 
-        _connectivity.ConnectivityChanged += OnConnectivityChanged;
+        _network.OnlineChanged += OnOnlineChanged;
         _sync.QueueChanged += OnQueueChanged;
         _shake.ShakeDetected += OnShakeDetected;
         _shake.Start();
@@ -73,32 +79,32 @@ public partial class InspectionsViewModel : ObservableObject
 
     public void OnDisappearing()
     {
-        _connectivity.ConnectivityChanged -= OnConnectivityChanged;
+        _network.OnlineChanged -= OnOnlineChanged;
         _sync.QueueChanged -= OnQueueChanged;
         _shake.ShakeDetected -= OnShakeDetected;
         _shake.Stop();
     }
 
     // Обробники подій сенсора й мережі викликаються не з потоку інтерфейсу,
-    // тому зміна властивостей і навігація виконуються через MainThread
-    private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e) =>
-        MainThread.BeginInvokeOnMainThread(() =>
+    // тому зміна властивостей і навігація виконуються через головний потік
+    private void OnOnlineChanged(object? sender, bool online) =>
+        _mainThread.BeginInvokeOnMainThread(() =>
         {
-            IsOnline = e.NetworkAccess == NetworkAccess.Internet;
-            _logger.LogInformation("Стан мережі змінився: {Access}", e.NetworkAccess);
+            IsOnline = online;
+            _logger.LogInformation("Стан мережі змінився: онлайн = {Online}", online);
         });
 
     private void OnQueueChanged(object? sender, EventArgs e) =>
-        MainThread.BeginInvokeOnMainThread(async () => await RefreshPendingAsync());
+        _mainThread.BeginInvokeOnMainThread(async () => await RefreshPendingAsync());
 
     private void OnShakeDetected(object? sender, EventArgs e) =>
-        MainThread.BeginInvokeOnMainThread(async () => await OpenIncidentAsync());
+        _mainThread.BeginInvokeOnMainThread(async () => await OpenIncidentAsync());
 
     private async Task OpenIncidentAsync()
     {
         _logger.LogInformation("Струшування: відкриття форми повідомлення про інцидент");
 
-        await Shell.Current.GoToAsync("incident/new", new Dictionary<string, object>
+        await _navigation.GoToAsync("incident/new", new Dictionary<string, object>
         {
             ["IsIncident"] = true
         });
@@ -132,7 +138,7 @@ public partial class InspectionsViewModel : ObservableObject
         catch (Exception ex)
         {
             _logger.LogError(ex, "Не вдалося завантажити акти огляду");
-            await Shell.Current.DisplayAlert("Помилка", "Не вдалося завантажити акти огляду.", "OK");
+            await _dialogs.AlertAsync("Помилка", "Не вдалося завантажити акти огляду.");
         }
     }
 
@@ -140,22 +146,22 @@ public partial class InspectionsViewModel : ObservableObject
     private Task SimulateShakeAsync() => OpenIncidentAsync();
 
     [RelayCommand]
-    private Task NewInspectionAsync() => Shell.Current.GoToAsync("inspection/new");
+    private Task NewInspectionAsync() => _navigation.GoToAsync("inspection/new");
 
     // Елемент Map не підтримується у Windows: там координати відкриваються кнопкою «На карті» біля акта
     [RelayCommand]
     private async Task OpenMapAsync()
     {
-        if (_deviceInfo.Platform == DevicePlatform.WinUI)
+        if (!_map.SupportsEmbeddedMap)
         {
-            _logger.LogInformation("Вбудована карта недоступна у Windows, запропоновано зовнішній застосунок карт");
-            await Shell.Current.DisplayAlert("Карта",
+            _logger.LogInformation("Вбудована карта недоступна на цій платформі, запропоновано зовнішній застосунок карт");
+            await _dialogs.AlertAsync("Карта",
                 "Вбудований елемент карти у Windows не підтримується. Натисніть «На карті» біля потрібного акта: " +
-                "його координати відкриються у застосунку «Карти».", "OK");
+                "його координати відкриються у застосунку «Карти».");
             return;
         }
 
-        await Shell.Current.GoToAsync("inspections/map");
+        await _navigation.GoToAsync("inspections/map");
     }
 
     [RelayCommand]
@@ -164,7 +170,7 @@ public partial class InspectionsViewModel : ObservableObject
         if (inspection is null)
             return;
 
-        await Shell.Current.GoToAsync("inspection/detail", new Dictionary<string, object>
+        await _navigation.GoToAsync("inspection/detail", new Dictionary<string, object>
         {
             ["SelectedInspection"] = inspection
         });
@@ -178,21 +184,19 @@ public partial class InspectionsViewModel : ObservableObject
 
         if (!inspection.HasLocation)
         {
-            await Shell.Current.DisplayAlert("Немає координат", "Для цього акта координати не визначались.", "OK");
+            await _dialogs.AlertAsync("Немає координат", "Для цього акта координати не визначались.");
             return;
         }
 
         try
         {
-            await _map.OpenAsync(inspection.Latitude!.Value, inspection.Longitude!.Value, new MapLaunchOptions
-            {
-                Name = $"Акт огляду, аудиторія {inspection.RoomNumber}"
-            });
+            await _map.OpenAsync(inspection.Latitude!.Value, inspection.Longitude!.Value,
+                $"Акт огляду, аудиторія {inspection.RoomNumber}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Не вдалося відкрити застосунок карт");
-            await Shell.Current.DisplayAlert("Карти недоступні", "Не вдалося відкрити застосунок карт.", "OK");
+            await _dialogs.AlertAsync("Карти недоступні", "Не вдалося відкрити застосунок карт.");
         }
     }
 }

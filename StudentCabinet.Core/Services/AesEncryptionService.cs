@@ -1,13 +1,19 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Maui.Storage;
 
 namespace StudentCabinetMVVM.Services;
 
 public class AesEncryptionService : IEncryptionService
 {
     private const string KeyName = "db_encryption_key";
+
+    private readonly ISecureStoreService _secureStore;
     private byte[]? _key;
+
+    public AesEncryptionService(ISecureStoreService secureStore)
+    {
+        _secureStore = secureStore;
+    }
 
     public async Task<string> EncryptAsync(string plainText)
     {
@@ -54,11 +60,11 @@ public class AesEncryptionService : IEncryptionService
         if (_key is not null)
             return _key;
 
-        var stored = await SecureStorage.Default.GetAsync(KeyName);
+        var stored = await _secureStore.GetAsync(KeyName);
         if (stored is null)
         {
             stored = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-            await SecureStorage.Default.SetAsync(KeyName, stored);
+            await _secureStore.SetAsync(KeyName, stored);
         }
 
         _key = Convert.FromBase64String(stored);

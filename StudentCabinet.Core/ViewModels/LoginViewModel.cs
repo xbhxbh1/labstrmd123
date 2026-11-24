@@ -9,6 +9,7 @@ public partial class LoginViewModel : ObservableObject
 {
     private readonly IAuthService _auth;
     private readonly IBiometricService _biometrics;
+    private readonly INavigationService _navigation;
     private readonly ILogger<LoginViewModel> _logger;
 
     [ObservableProperty]
@@ -39,10 +40,12 @@ public partial class LoginViewModel : ObservableObject
 
     public bool HasBiometricHint => !string.IsNullOrEmpty(BiometricHint);
 
-    public LoginViewModel(IAuthService auth, IBiometricService biometrics, ILogger<LoginViewModel> logger)
+    public LoginViewModel(IAuthService auth, IBiometricService biometrics, INavigationService navigation,
+        ILogger<LoginViewModel> logger)
     {
         _auth = auth;
         _biometrics = biometrics;
+        _navigation = navigation;
         _logger = logger;
     }
 
@@ -84,7 +87,7 @@ public partial class LoginViewModel : ObservableObject
             }
 
             Password = string.Empty;
-            await Shell.Current.GoToAsync("//MainPage");
+            await _navigation.GoToAsync("//MainPage");
         }
         finally
         {
@@ -115,7 +118,7 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
-            await Shell.Current.GoToAsync("//MainPage");
+            await _navigation.GoToAsync("//MainPage");
         }
         finally
         {

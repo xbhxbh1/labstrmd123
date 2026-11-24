@@ -37,4 +37,14 @@ public class AppDatabase
             _lock.Release();
         }
     }
+
+    /// <summary>Закриває з'єднання (потрібно інтеграційним тестам перед видаленням тимчасового файла).</summary>
+    public async Task CloseAsync()
+    {
+        if (_connection is null)
+            return;
+
+        await _connection.CloseAsync();
+        _connection = null;
+    }
 }

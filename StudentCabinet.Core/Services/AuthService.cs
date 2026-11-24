@@ -8,12 +8,15 @@ public class AuthService : IAuthService
     private const string TokenKey = "auth_token";
 
     private readonly IAuthApi _api;
+    private readonly ISecureStoreService _secureStore;
     private readonly ISessionService _session;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IAuthApi api, ISessionService session, ILogger<AuthService> logger)
+    public AuthService(IAuthApi api, ISecureStoreService secureStore, ISessionService session,
+        ILogger<AuthService> logger)
     {
         _api = api;
+        _secureStore = secureStore;
         _session = session;
         _logger = logger;
     }
@@ -50,11 +53,11 @@ public class AuthService : IAuthService
 
         try
         {
-            await SecureStorage.Default.SetAsync(TokenKey, token);
+            await _secureStore.SetAsync(TokenKey, token);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Не вдалося зберегти токен у SecureStorage");
+            _logger.LogError(ex, "Не вдалося зберегти токен у захищеному сховищі");
             return AuthResult.Fail("Не вдалося безпечно зберегти токен доступу.");
         }
 
@@ -71,11 +74,11 @@ public class AuthService : IAuthService
     {
         try
         {
-            return await SecureStorage.Default.GetAsync(TokenKey);
+            return await _secureStore.GetAsync(TokenKey);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Не вдалося прочитати токен із SecureStorage");
+            _logger.LogError(ex, "Не вдалося прочитати токен із захищеного сховища");
             return null;
         }
     }
@@ -92,14 +95,14 @@ public class AuthService : IAuthService
         if (!JwtParser.TryParse(token, out var claims))
         {
             _logger.LogWarning("Збережений токен має некоректний формат і буде видалений");
-            SecureStorage.Default.Remove(TokenKey);
+            _secureStore.Remove(TokenKey);
             return AuthResult.Fail("Збережений токен пошкоджено. Увійдіть за допомогою пароля.");
         }
 
         if (claims.ExpiresAt <= DateTimeOffset.UtcNow)
         {
             _logger.LogInformation("Термін дії збереженого токена користувача {User} минув", claims.UserName);
-            SecureStorage.Default.Remove(TokenKey);
+            _secureStore.Remove(TokenKey);
             return AuthResult.Fail("Термін дії збереженого токена минув. Увійдіть за допомогою пароля.");
         }
 
@@ -111,7 +114,7 @@ public class AuthService : IAuthService
 
     public void Logout()
     {
-        SecureStorage.Default.Remove(TokenKey);
+        _secureStore.Remove(TokenKey);
         _logger.LogInformation("Вихід користувача {User}", _session.UserName);
         _session.SignOut();
     }

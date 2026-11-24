@@ -11,12 +11,15 @@ public partial class LogsViewModel : ObservableObject
 {
     private readonly ILogFileReader _reader;
     private readonly ICrashReporter _crashReporter;
+    private readonly IDialogService _dialogs;
     private readonly ILogger<LogsViewModel> _logger;
 
-    public LogsViewModel(ILogFileReader reader, ICrashReporter crashReporter, ILogger<LogsViewModel> logger)
+    public LogsViewModel(ILogFileReader reader, ICrashReporter crashReporter, IDialogService dialogs,
+        ILogger<LogsViewModel> logger)
     {
         _reader = reader;
         _crashReporter = crashReporter;
+        _dialogs = dialogs;
         _logger = logger;
         Dsn = crashReporter.Dsn;
     }
@@ -86,7 +89,7 @@ public partial class LogsViewModel : ObservableObject
     [RelayCommand]
     private async Task SimulateCrashAsync()
     {
-        var confirmed = await Shell.Current.DisplayAlert(
+        var confirmed = await _dialogs.ConfirmAsync(
             "Штучний краш", "Застосунок аварійно завершить роботу. Продовжити?", "Так", "Ні");
         if (!confirmed)
             return;

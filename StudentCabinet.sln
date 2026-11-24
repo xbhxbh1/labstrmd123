@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stub", "stub", "{BD919AE1-9
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentCabinet.StubApi", "stub\StudentCabinet.StubApi\StudentCabinet.StubApi.csproj", "{6E0ADF4A-2926-4E97-A588-113D62DD9A7C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentCabinet.Core", "StudentCabinet.Core\StudentCabinet.Core.csproj", "{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,18 @@ Global
 		{6E0ADF4A-2926-4E97-A588-113D62DD9A7C}.Release|x64.Build.0 = Release|Any CPU
 		{6E0ADF4A-2926-4E97-A588-113D62DD9A7C}.Release|x86.ActiveCfg = Release|Any CPU
 		{6E0ADF4A-2926-4E97-A588-113D62DD9A7C}.Release|x86.Build.0 = Release|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Debug|x64.Build.0 = Debug|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Debug|x86.Build.0 = Debug|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Release|x64.ActiveCfg = Release|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Release|x64.Build.0 = Release|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Release|x86.ActiveCfg = Release|Any CPU
+		{C2A59E5A-D9E7-4AF2-B824-42E9EE37ED4C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

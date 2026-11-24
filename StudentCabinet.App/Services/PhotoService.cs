@@ -33,7 +33,7 @@ public class PhotoService : IPhotoService
                     return new PhotoResult(PhotoStatus.NotSupported);
                 }
 
-                if (!await _permissions.EnsureAsync<Permissions.Camera>())
+                if (!await _permissions.EnsureAsync(DevicePermission.Camera))
                 {
                     _logger.LogWarning("Фото не зроблено: користувач не надав дозвіл на камеру");
                     return new PhotoResult(PhotoStatus.PermissionDenied);

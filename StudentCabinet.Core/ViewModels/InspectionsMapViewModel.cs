@@ -11,6 +11,7 @@ public partial class InspectionsMapViewModel : ObservableObject
 {
     private readonly IInspectionRepository _repository;
     private readonly IPermissionService _permissions;
+    private readonly INavigationService _navigation;
     private readonly ILogger<InspectionsMapViewModel> _logger;
 
     public ObservableCollection<InspectionPinItem> Pins { get; } = new();
@@ -21,10 +22,12 @@ public partial class InspectionsMapViewModel : ObservableObject
     public InspectionsMapViewModel(
         IInspectionRepository repository,
         IPermissionService permissions,
+        INavigationService navigation,
         ILogger<InspectionsMapViewModel> logger)
     {
         _repository = repository;
         _permissions = permissions;
+        _navigation = navigation;
         _logger = logger;
     }
 
@@ -34,7 +37,7 @@ public partial class InspectionsMapViewModel : ObservableObject
         try
         {
             // дозвіл потрібен лише для позначки «моє місцезнаходження» (IsShowingUser); без нього карта працює
-            await _permissions.EnsureAsync<Permissions.LocationWhenInUse>();
+            await _permissions.EnsureAsync(DevicePermission.Location);
 
             var inspections = await _repository.GetAllAsync();
 
@@ -42,7 +45,8 @@ public partial class InspectionsMapViewModel : ObservableObject
             foreach (var inspection in inspections.Where(i => i.HasLocation))
             {
                 Pins.Add(new InspectionPinItem(
-                    new Location(inspection.Latitude!.Value, inspection.Longitude!.Value),
+                    inspection.Latitude!.Value,
+                    inspection.Longitude!.Value,
                     inspection.RoomNumber,
                     inspection.Description));
             }
@@ -59,5 +63,5 @@ public partial class InspectionsMapViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private Task GoBackAsync() => Shell.Current.GoToAsync("..");
+    private Task GoBackAsync() => _navigation.GoBackAsync();
 }

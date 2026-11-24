@@ -16,6 +16,7 @@ public partial class UsersViewModel : ObservableObject
 {
     private readonly IAuthApi _api;
     private readonly IAuthService _auth;
+    private readonly INavigationService _navigation;
     private readonly ILogger<UsersViewModel> _logger;
 
     public ObservableCollection<UserInfo> Users { get; } = new();
@@ -23,10 +24,12 @@ public partial class UsersViewModel : ObservableObject
     [ObservableProperty]
     private string _status = string.Empty;
 
-    public UsersViewModel(IAuthApi api, IAuthService auth, ILogger<UsersViewModel> logger)
+    public UsersViewModel(IAuthApi api, IAuthService auth, INavigationService navigation,
+        ILogger<UsersViewModel> logger)
     {
         _api = api;
         _auth = auth;
+        _navigation = navigation;
         _logger = logger;
     }
 
@@ -69,5 +72,5 @@ public partial class UsersViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private Task GoBackAsync() => Shell.Current.GoToAsync("..");
+    private Task GoBackAsync() => _navigation.GoBackAsync();
 }

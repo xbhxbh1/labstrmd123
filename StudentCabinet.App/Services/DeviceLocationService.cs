@@ -20,7 +20,7 @@ public class DeviceLocationService : IDeviceLocationService
     {
         try
         {
-            if (!await _permissions.EnsureAsync<Permissions.LocationWhenInUse>())
+            if (!await _permissions.EnsureAsync(DevicePermission.Location))
             {
                 _logger.LogWarning("Місцеперебування не визначено: користувач не надав дозвіл на геолокацію");
                 return new LocationResult(LocationStatus.PermissionDenied);

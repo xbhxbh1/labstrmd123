@@ -3,14 +3,17 @@ namespace StudentCabinetMVVM.ViewModels;
 /// <summary>Елемент колекції маркерів карти (ItemsSource елемента Map прив'язується до колекції таких об'єктів).</summary>
 public class InspectionPinItem
 {
-    public InspectionPinItem(Location location, string roomNumber, string description)
+    public InspectionPinItem(double latitude, double longitude, string roomNumber, string description)
     {
-        Location = location;
+        Latitude = latitude;
+        Longitude = longitude;
         RoomNumber = roomNumber;
         Description = description;
     }
 
-    public Location Location { get; }
+    public double Latitude { get; }
+
+    public double Longitude { get; }
 
     public string RoomNumber { get; }
 

@@ -11,7 +11,14 @@ public class PermissionService : IPermissionService
         _logger = logger;
     }
 
-    public async Task<bool> EnsureAsync<TPermission>() where TPermission : Permissions.BasePermission, new()
+    public Task<bool> EnsureAsync(DevicePermission permission) => permission switch
+    {
+        DevicePermission.Camera => EnsureAsync<Permissions.Camera>(),
+        DevicePermission.Location => EnsureAsync<Permissions.LocationWhenInUse>(),
+        _ => Task.FromResult(false)
+    };
+
+    private async Task<bool> EnsureAsync<TPermission>() where TPermission : Permissions.BasePermission, new()
     {
         var name = typeof(TPermission).Name;
 

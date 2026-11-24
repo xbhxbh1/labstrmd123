@@ -2,9 +2,14 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
-             xmlns:vm="clr-namespace:StudentCabinetMVVM.ViewModels"
+             xmlns:vm="clr-namespace:StudentCabinetMVVM.ViewModels;assembly=StudentCabinet.Core"
+             xmlns:conv="clr-namespace:StudentCabinetMVVM.Converters"
              x:Class="StudentCabinetMVVM.Views.InspectionsMapPage"
              Title="Карта актів огляду">
+
+    <ContentPage.Resources>
+        <conv:PinLocationConverter x:Key="PinLocationConverter" />
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto" Padding="8" RowSpacing="8">
 
@@ -19,7 +24,7 @@
                   AutomationId="InspectionsMap">
             <maps:Map.ItemTemplate>
                 <DataTemplate x:DataType="vm:InspectionPinItem">
-                    <maps:Pin Location="{Binding Location}"
+                    <maps:Pin Location="{Binding ., Converter={StaticResource PinLocationConverter}}"
                               Label="{Binding RoomNumber}"
                               Address="{Binding Description}" />
                 </DataTemplate>

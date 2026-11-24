@@ -4,26 +4,20 @@ namespace StudentCabinetMVVM.Services;
 
 public class LogFileReader : ILogFileReader
 {
-    private readonly string? _directory;
-
-    public LogFileReader()
-    {
-    }
+    private readonly string _directory;
 
     public LogFileReader(string directory)
     {
         _directory = directory;
     }
 
-    private string LogsDirectory => _directory ?? AppPaths.LogsDirectory;
-
     public async Task<IReadOnlyList<LogEntry>> ReadLastAsync(int count, string minLevel)
     {
-        if (!Directory.Exists(LogsDirectory))
+        if (!Directory.Exists(_directory))
             return Array.Empty<LogEntry>();
 
         var minRank = LogParser.Rank(minLevel);
-        var files = Directory.GetFiles(LogsDirectory, "app-*.log")
+        var files = Directory.GetFiles(_directory, "app-*.log")
             .OrderByDescending(f => f, StringComparer.Ordinal)
             .ToList();
 

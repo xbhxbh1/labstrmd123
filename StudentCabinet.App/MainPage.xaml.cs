@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
+using StudentCabinetMVVM.Services;
 using StudentCabinetMVVM.ViewModels;
 
 namespace StudentCabinetMVVM;
 
-public partial class MainPage : ContentPage
+public partial class MainPage : ContentPage, IQueryAttributable
 {
     private readonly ILogger<MainPage> _logger;
 
@@ -12,6 +13,13 @@ public partial class MainPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         _logger = logger;
+    }
+
+    // Shell передає параметри навігації сторінці, а вона пересилає їх у ViewModel ядра
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (BindingContext is IQueryReceiver receiver)
+            receiver.ApplyQuery(query);
     }
 
     protected override void OnAppearing()
