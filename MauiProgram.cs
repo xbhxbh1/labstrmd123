@@ -17,6 +17,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseSentry(CrashReportingConfig.Configure)
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -32,6 +33,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IEncryptionService, AesEncryptionService>();
         builder.Services.AddSingleton<IStudentRepository, StudentRepository>();
         builder.Services.AddSingleton<ISyncService, SyncService>();
+        builder.Services.AddSingleton<ICrashReporter, SentryCrashReporter>();
 
         builder.Services.AddTransient<StudentViewModel>();
         builder.Services.AddTransient<MainPage>();
