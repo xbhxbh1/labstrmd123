@@ -18,12 +18,15 @@
                  Maximum="5"
                  Increment="0.5"
                  Value="{Binding AverageScore, Mode=TwoWay}"
-                 HorizontalOptions="Start" />
+                 HorizontalOptions="Start"
+                 AutomationId="ScoreStepper" />
 
         <Button Text="Зберегти"
-                Command="{Binding SaveCommand}" />
+                Command="{Binding SaveCommand}"
+                AutomationId="SaveStudentButton" />
 
         <Button Text="Назад"
-                Command="{Binding GoBackCommand}" />
+                Command="{Binding GoBackCommand}"
+                AutomationId="BackButton" />
     </VerticalStackLayout>
 </ContentPage>

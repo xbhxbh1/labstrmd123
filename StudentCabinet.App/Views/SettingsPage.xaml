@@ -10,7 +10,8 @@
                FontAttributes="Bold" />
 
         <HorizontalStackLayout Spacing="12">
-            <Switch IsToggled="{Binding IsDarkTheme, Mode=TwoWay}" />
+            <Switch IsToggled="{Binding IsDarkTheme, Mode=TwoWay}"
+                    AutomationId="ThemeSwitch" />
             <Label Text="{Binding ThemeName, StringFormat='Поточна тема: {0}'}"
                    VerticalOptions="Center" />
         </HorizontalStackLayout>
