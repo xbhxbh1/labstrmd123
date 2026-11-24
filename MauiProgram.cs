@@ -3,6 +3,7 @@ using Serilog;
 using StudentCabinetMVVM.Data;
 using StudentCabinetMVVM.Services;
 using StudentCabinetMVVM.ViewModels;
+using StudentCabinetMVVM.Views;
 
 namespace StudentCabinetMVVM;
 
@@ -33,10 +34,13 @@ public static class MauiProgram
         builder.Services.AddSingleton<IEncryptionService, AesEncryptionService>();
         builder.Services.AddSingleton<IStudentRepository, StudentRepository>();
         builder.Services.AddSingleton<ISyncService, SyncService>();
+        builder.Services.AddSingleton<ILogFileReader, LogFileReader>();
         builder.Services.AddSingleton<ICrashReporter, SentryCrashReporter>();
 
         builder.Services.AddTransient<StudentViewModel>();
         builder.Services.AddTransient<MainPage>();
+        builder.Services.AddTransient<LogsViewModel>();
+        builder.Services.AddTransient<LogsPage>();
 
         return builder.Build();
     }

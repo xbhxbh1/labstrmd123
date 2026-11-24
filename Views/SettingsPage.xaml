@@ -15,6 +15,10 @@
                    VerticalOptions="Center" />
         </HorizontalStackLayout>
 
+        <Button Text="Журнал подій"
+                AutomationId="OpenLogsButton"
+                Command="{Binding OpenLogsCommand}" />
+
         <Button Text="Назад"
                 Command="{Binding GoBackCommand}" />
     </VerticalStackLayout>

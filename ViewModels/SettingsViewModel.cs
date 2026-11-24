@@ -20,6 +20,7 @@ public class SettingsViewModel : INotifyPropertyChanged
             || (saved == string.Empty && Application.Current?.RequestedTheme == AppTheme.Dark);
 
         GoBackCommand = new Command(async () => await Shell.Current.GoToAsync(".."));
+        OpenLogsCommand = new Command(async () => await Shell.Current.GoToAsync("logs"));
     }
 
     public bool IsDarkTheme
@@ -40,6 +41,8 @@ public class SettingsViewModel : INotifyPropertyChanged
     public string ThemeName => IsDarkTheme ? "Темна" : "Світла";
 
     public ICommand GoBackCommand { get; }
+
+    public ICommand OpenLogsCommand { get; }
 
     private static void ApplyTheme(bool dark)
     {
