@@ -19,6 +19,7 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseSentry(CrashReportingConfig.Configure)
+            .UseMauiMaps()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -42,6 +43,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAccelerometer>(Accelerometer.Default);
         builder.Services.AddSingleton<IConnectivity>(Connectivity.Current);
         builder.Services.AddSingleton<IMap>(Microsoft.Maui.ApplicationModel.Map.Default);
+        builder.Services.AddSingleton<IDeviceInfo>(DeviceInfo.Current);
         builder.Services.AddSingleton<IPermissionService, PermissionService>();
         builder.Services.AddSingleton<IPhotoService, PhotoService>();
         builder.Services.AddSingleton<IDeviceLocationService, DeviceLocationService>();
@@ -66,6 +68,8 @@ public static class MauiProgram
         builder.Services.AddTransient<InspectionEditPage>();
         builder.Services.AddTransient<InspectionDetailViewModel>();
         builder.Services.AddTransient<InspectionDetailPage>();
+        builder.Services.AddTransient<InspectionsMapViewModel>();
+        builder.Services.AddTransient<InspectionsMapPage>();
         builder.Services.AddTransient<LogsViewModel>();
         builder.Services.AddTransient<LogsPage>();
 

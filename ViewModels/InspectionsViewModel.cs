@@ -11,6 +11,7 @@ public partial class InspectionsViewModel : ObservableObject
 {
     private readonly IInspectionRepository _repository;
     private readonly IMap _map;
+    private readonly IDeviceInfo _deviceInfo;
     private readonly ILogger<InspectionsViewModel> _logger;
 
     public ObservableCollection<RoomInspection> Inspections { get; } = new();
@@ -18,10 +19,15 @@ public partial class InspectionsViewModel : ObservableObject
     [ObservableProperty]
     private string _status = string.Empty;
 
-    public InspectionsViewModel(IInspectionRepository repository, IMap map, ILogger<InspectionsViewModel> logger)
+    public InspectionsViewModel(
+        IInspectionRepository repository,
+        IMap map,
+        IDeviceInfo deviceInfo,
+        ILogger<InspectionsViewModel> logger)
     {
         _repository = repository;
         _map = map;
+        _deviceInfo = deviceInfo;
         _logger = logger;
     }
 
@@ -47,6 +53,22 @@ public partial class InspectionsViewModel : ObservableObject
 
     [RelayCommand]
     private Task NewInspectionAsync() => Shell.Current.GoToAsync("inspection/new");
+
+    // Елемент Map не підтримується у Windows: там координати відкриваються кнопкою «На карті» біля акта
+    [RelayCommand]
+    private async Task OpenMapAsync()
+    {
+        if (_deviceInfo.Platform == DevicePlatform.WinUI)
+        {
+            _logger.LogInformation("Вбудована карта недоступна у Windows, запропоновано зовнішній застосунок карт");
+            await Shell.Current.DisplayAlert("Карта",
+                "Вбудований елемент карти у Windows не підтримується. Натисніть «На карті» біля потрібного акта: " +
+                "його координати відкриються у застосунку «Карти».", "OK");
+            return;
+        }
+
+        await Shell.Current.GoToAsync("inspections/map");
+    }
 
     [RelayCommand]
     private async Task OpenDetailsAsync(RoomInspection? inspection)

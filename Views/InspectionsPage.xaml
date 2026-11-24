@@ -12,6 +12,10 @@
                     Command="{Binding NewInspectionCommand}"
                     AutomationId="NewInspectionButton"
                     Margin="0,0,8,6" />
+            <Button Text="Карта"
+                    Command="{Binding OpenMapCommand}"
+                    AutomationId="OpenMapButton"
+                    Margin="0,0,8,6" />
         </FlexLayout>
 
         <Label Grid.Row="1"
