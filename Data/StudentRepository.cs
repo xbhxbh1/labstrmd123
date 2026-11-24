@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using SQLite;
 using StudentCabinetMVVM.Models;
 using StudentCabinetMVVM.Services;
@@ -10,80 +10,140 @@ public class StudentRepository : IStudentRepository
 {
     private readonly AppDatabase _database;
     private readonly IEncryptionService _encryption;
+    private readonly ILogger<StudentRepository> _logger;
 
-    public StudentRepository(AppDatabase database, IEncryptionService encryption)
+    public StudentRepository(AppDatabase database, IEncryptionService encryption, ILogger<StudentRepository> logger)
     {
         _database = database;
         _encryption = encryption;
+        _logger = logger;
     }
 
     public async Task<List<Student>> GetAllAsync()
     {
-        var db = await _database.GetConnectionAsync();
-        var records = await db.Table<StudentRecord>().ToListAsync();
+        try
+        {
+            var db = await _database.GetConnectionAsync();
+            var records = await db.Table<StudentRecord>().ToListAsync();
 
-        var students = new List<Student>();
-        foreach (var record in records)
-            students.Add(await ToStudentAsync(record));
+            var students = new List<Student>();
+            foreach (var record in records)
+                students.Add(await ToStudentAsync(record));
 
-        return students;
+            _logger.LogDebug("Прочитано записів з таблиці Students: {Count}", students.Count);
+            return students;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося прочитати список студентів із БД");
+            throw;
+        }
     }
 
     public async Task<Student?> GetByIdAsync(int id)
     {
-        var db = await _database.GetConnectionAsync();
-        var record = await db.FindAsync<StudentRecord>(id);
+        try
+        {
+            var db = await _database.GetConnectionAsync();
+            var record = await db.FindAsync<StudentRecord>(id);
 
-        return record is null ? null : await ToStudentAsync(record);
+            if (record is null)
+            {
+                _logger.LogWarning("Студента з Id={Id} не знайдено в БД", id);
+                return null;
+            }
+
+            return await ToStudentAsync(record);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося прочитати студента з Id={Id}", id);
+            throw;
+        }
     }
 
     public async Task<int> SaveAsync(Student student)
     {
-        var db = await _database.GetConnectionAsync();
-
-        var record = new StudentRecord
+        try
         {
-            Id = student.Id,
-            FullNameEncrypted = await _encryption.EncryptAsync(student.FullName),
-            Group = student.Group,
-            AverageScore = student.AverageScore,
-            UpdatedAt = DateTime.UtcNow
-        };
+            var db = await _database.GetConnectionAsync();
 
-        var isNew = record.Id == 0;
-        var rows = isNew
-            ? await db.InsertAsync(record)
-            : await db.UpdateAsync(record);
+            var record = new StudentRecord
+            {
+                Id = student.Id,
+                FullNameEncrypted = await _encryption.EncryptAsync(student.FullName),
+                Group = student.Group,
+                AverageScore = student.AverageScore,
+                UpdatedAt = DateTime.UtcNow
+            };
 
-        student.Id = record.Id;
+            var isNew = record.Id == 0;
+            var rows = isNew
+                ? await db.InsertAsync(record)
+                : await db.UpdateAsync(record);
 
-        Debug.WriteLine($"[DB] {(isNew ? "INSERT" : "UPDATE")} Id={record.Id}; ПІБ у БД (зашифровано): {record.FullNameEncrypted}");
+            student.Id = record.Id;
 
-        await EnqueueAsync(db, isNew ? "Insert" : "Update", JsonSerializer.Serialize(record));
+            _logger.LogInformation("Студента збережено: Id={Id}, операція={Operation}",
+                record.Id, isNew ? "INSERT" : "UPDATE");
+            _logger.LogDebug("ПІБ у БД (зашифровано): {Cipher}", record.FullNameEncrypted);
 
-        return rows;
+            await EnqueueAsync(db, isNew ? "Insert" : "Update", JsonSerializer.Serialize(record));
+
+            return rows;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося зберегти студента (Id={Id})", student.Id);
+            throw;
+        }
     }
 
     public async Task<int> DeleteAsync(Student student)
     {
-        var db = await _database.GetConnectionAsync();
-        var rows = await db.DeleteAsync<StudentRecord>(student.Id);
+        try
+        {
+            var db = await _database.GetConnectionAsync();
+            var rows = await db.DeleteAsync<StudentRecord>(student.Id);
 
-        Debug.WriteLine($"[DB] DELETE Id={student.Id}");
+            if (rows == 0)
+                _logger.LogWarning("Видалення: запис з Id={Id} не знайдено в БД", student.Id);
+            else
+                _logger.LogInformation("Студента видалено: Id={Id}", student.Id);
 
-        var payload = JsonSerializer.Serialize(new { student.Id, UpdatedAt = DateTime.UtcNow });
-        await EnqueueAsync(db, "Delete", payload);
+            var payload = JsonSerializer.Serialize(new { student.Id, UpdatedAt = DateTime.UtcNow });
+            await EnqueueAsync(db, "Delete", payload);
 
-        return rows;
+            return rows;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося видалити студента (Id={Id})", student.Id);
+            throw;
+        }
     }
 
-    private async Task<Student> ToStudentAsync(StudentRecord record) => new()
+    private async Task<Student> ToStudentAsync(StudentRecord record)
     {
-        Id = record.Id,
-        FullName = await _encryption.DecryptAsync(record.FullNameEncrypted),
-        Group = record.Group,
-        AverageScore = record.AverageScore
-    };
+        string fullName;
+        try
+        {
+            fullName = await _encryption.DecryptAsync(record.FullNameEncrypted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося розшифрувати ПІБ студента Id={Id}", record.Id);
+            fullName = "(не вдалося розшифрувати)";
+        }
+
+        return new Student
+        {
+            Id = record.Id,
+            FullName = fullName,
+            Group = record.Group,
+            AverageScore = record.AverageScore
+        };
+    }
 
     private static Task EnqueueAsync(SQLiteAsyncConnection db, string operation, string payloadJson) =>
         db.InsertAsync(new SyncQueueItem

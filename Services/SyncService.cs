@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Networking;
 using StudentCabinetMVVM.Data;
 
@@ -8,6 +8,7 @@ namespace StudentCabinetMVVM.Services;
 public class SyncService : ISyncService
 {
     private readonly AppDatabase _database;
+    private readonly ILogger<SyncService> _logger;
     private readonly SemaphoreSlim _syncLock = new(1, 1);
     private readonly HttpClient _http = new()
     {
@@ -17,9 +18,10 @@ public class SyncService : ISyncService
 
     public event EventHandler? QueueChanged;
 
-    public SyncService(AppDatabase database)
+    public SyncService(AppDatabase database, ILogger<SyncService> logger)
     {
         _database = database;
+        _logger = logger;
         Connectivity.Current.ConnectivityChanged += async (_, _) => await SyncAsync();
     }
 
@@ -33,7 +35,7 @@ public class SyncService : ISyncService
     {
         if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
         {
-            Debug.WriteLine("[Sync] Немає мережі: зміни залишаються в черзі");
+            _logger.LogWarning("Немає мережі: зміни залишаються в черзі синхронізації");
             return 0;
         }
 
@@ -51,18 +53,20 @@ public class SyncService : ISyncService
                 var response = await _http.PostAsJsonAsync("api/sync", item);
                 if (!response.IsSuccessStatusCode)
                 {
-                    Debug.WriteLine($"[Sync] Сервер відповів {(int)response.StatusCode}, зупиняємось");
+                    _logger.LogError("Сервер відхилив запис черги #{QueueId}: HTTP {Status}",
+                        item.Id, (int)response.StatusCode);
                     break;
                 }
 
                 await db.DeleteAsync(item);
                 sent++;
-                Debug.WriteLine($"[Sync] Відправлено: {item.Operation} (запис черги #{item.Id})");
+                _logger.LogInformation("Відправлено на сервер: {Operation} (запис черги #{QueueId})",
+                    item.Operation, item.Id);
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[Sync] Сервер недоступний: {ex.Message}");
+            _logger.LogWarning("Сервер синхронізації недоступний: {Reason}", ex.Message);
         }
         finally
         {

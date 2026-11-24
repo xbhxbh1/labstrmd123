@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Storage;
 using StudentCabinetMVVM.Services;
@@ -9,15 +9,18 @@ namespace StudentCabinetMVVM;
 public partial class App : Application
 {
     private readonly IAppStateService _state;
+    private readonly ILogger<App> _logger;
 
-    public App(IAppStateService state)
+    public App(IAppStateService state, ILogger<App> logger)
     {
         InitializeComponent();
 
         _state = state;
+        _logger = logger;
         _state.Restore();
 
         ApplySavedTheme();
+        _logger.LogInformation("Застосунок створено, початок сесії {Start:HH:mm:ss}", _state.SessionStartedAt);
     }
 
     private void ApplySavedTheme()
@@ -42,19 +45,19 @@ public partial class App : Application
 
         window.Stopped += (s, e) =>
         {
-            Debug.WriteLine("[Lifecycle] App Stopped: збереження стану");
+            _logger.LogInformation("Життєвий цикл: Stopped, застосунок згорнуто, збереження стану");
             _state.Save();
         };
 
         window.Resumed += (s, e) =>
         {
-            Debug.WriteLine("[Lifecycle] App Resumed: відновлення стану");
+            _logger.LogInformation("Життєвий цикл: Resumed, застосунок повернуто, відновлення стану");
             _state.Restore();
         };
 
         window.Destroying += (s, e) =>
         {
-            Debug.WriteLine("[Lifecycle] App Destroying: звільнення ресурсів");
+            _logger.LogInformation("Життєвий цикл: Destroying, звільнення ресурсів");
             _state.Save();
         };
 

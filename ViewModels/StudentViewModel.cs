@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using StudentCabinetMVVM.Data;
@@ -16,6 +16,7 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
     private readonly IAppStateService _state;
     private readonly IStudentRepository _repository;
     private readonly ISyncService _sync;
+    private readonly ILogger<StudentViewModel> _logger;
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private Student _student = new();
     private bool _isLoaded;
@@ -99,11 +100,16 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
 
     public ICommand SyncCommand { get; }
 
-    public StudentViewModel(IAppStateService state, IStudentRepository repository, ISyncService sync)
+    public StudentViewModel(
+        IAppStateService state,
+        IStudentRepository repository,
+        ISyncService sync,
+        ILogger<StudentViewModel> logger)
     {
         _state = state;
         _repository = repository;
         _sync = sync;
+        _logger = logger;
 
         AddStudentCommand = new Command(async () => await AddStudentAsync(), CanAddStudent);
         OpenDetailsCommand = new Command<Student>(async (student) =>
@@ -137,6 +143,7 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
         {
             if (!_isLoaded)
             {
+                _logger.LogInformation("Завантаження списку студентів із бази даних");
                 var students = await _repository.GetAllAsync();
 
                 Students.Clear();
@@ -144,7 +151,14 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
                     Students.Add(student);
 
                 _isLoaded = true;
+                _logger.LogInformation("Завантажено студентів: {Count}", students.Count);
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося завантажити список студентів");
+            await Shell.Current.DisplayAlert("Помилка", "Не вдалося завантажити дані з бази.", "OK");
+            return;
         }
         finally
         {
@@ -159,6 +173,9 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
 
     private async Task AddStudentAsync()
     {
+        if (string.IsNullOrWhiteSpace(Group))
+            _logger.LogWarning("Студента додається без вказання групи");
+
         var student = new Student
         {
             FullName = FullName,
@@ -166,8 +183,18 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
             AverageScore = AverageScore
         };
 
-        await _repository.SaveAsync(student);
-        Students.Add(student);
+        try
+        {
+            await _repository.SaveAsync(student);
+            Students.Add(student);
+            _logger.LogInformation("Студента додано до списку: Id={Id}", student.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося додати студента");
+            await Shell.Current.DisplayAlert("Помилка", "Не вдалося зберегти студента.", "OK");
+            return;
+        }
 
         FullName = string.Empty;
         Group = string.Empty;
@@ -179,8 +206,18 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
     {
         if (student is null) return;
 
-        await _repository.DeleteAsync(student);
-        Students.Remove(student);
+        try
+        {
+            await _repository.DeleteAsync(student);
+            Students.Remove(student);
+            _logger.LogInformation("Студента видалено зі списку: Id={Id}", student.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося видалити студента Id={Id}", student.Id);
+            await Shell.Current.DisplayAlert("Помилка", "Не вдалося видалити студента.", "OK");
+            return;
+        }
 
         await AfterChangeAsync();
     }
@@ -188,6 +225,8 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
     private async Task OpenDetailsAsync(Student student)
     {
         if (student is null) return;
+
+        _logger.LogDebug("Відкриття деталей студента Id={Id}", student.Id);
 
         var parameters = new Dictionary<string, object>
         {
@@ -211,13 +250,26 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
             return;
 
         _lastSaved = (updated.Id, updated.AverageScore);
-        await _repository.SaveAsync(updated);
 
-        var index = Students.IndexOf(updated);
-        if (index >= 0)
+        try
         {
-            Students.RemoveAt(index);
-            Students.Insert(index, updated);
+            await _repository.SaveAsync(updated);
+
+            var index = Students.IndexOf(updated);
+            if (index >= 0)
+            {
+                Students.RemoveAt(index);
+                Students.Insert(index, updated);
+            }
+
+            _logger.LogInformation("Оновлено студента Id={Id}, середній бал {Score:F2}",
+                updated.Id, updated.AverageScore);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не вдалося зберегти зміни студента Id={Id}", updated.Id);
+            await Shell.Current.DisplayAlert("Помилка", "Не вдалося зберегти зміни.", "OK");
+            return;
         }
 
         await AfterChangeAsync();
@@ -236,6 +288,7 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
 
     private async Task SyncNowAsync()
     {
+        _logger.LogInformation("Ручний запуск синхронізації");
         await _sync.SyncAsync();
         await RefreshPendingAsync();
     }
@@ -246,13 +299,13 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
         if (link is null || !_isLoaded || Shell.Current?.CurrentPage is null) return;
 
         _state.PendingDeepLink = null;
-        Debug.WriteLine($"[DeepLink] Отримано: {link}");
+        _logger.LogInformation("Отримано deep link: {Link}", link);
 
         if (!Uri.TryCreate(link, UriKind.Absolute, out var uri)
             || uri.Scheme != "studentcabinet"
             || uri.Host != "student")
         {
-            Debug.WriteLine("[DeepLink] Невідомий формат посилання");
+            _logger.LogWarning("Невідомий формат deep link: {Link}", link);
             return;
         }
 
@@ -262,7 +315,7 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
 
         if (student is null)
         {
-            Debug.WriteLine($"[DeepLink] Студента не знайдено: {name}");
+            _logger.LogWarning("Deep link: студента не знайдено ({Name})", name);
             return;
         }
 
@@ -273,7 +326,7 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[DeepLink] Помилка навігації: {ex.Message}");
+            _logger.LogError(ex, "Помилка навігації за deep link");
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using Serilog;
 using StudentCabinetMVVM.Services;
 
 namespace StudentCabinetMVVM.WinUI;
@@ -10,6 +11,13 @@ public partial class App : MauiWinUIApplication
     public App()
     {
         this.InitializeComponent();
+
+        // Платформо-специфічний перехоплювач необроблених винятків WinUI (аналог AndroidEnvironment.UnhandledExceptionRaiser).
+        this.UnhandledException += (s, e) =>
+        {
+            Log.Fatal(e.Exception, "Необроблений виняток WinUI: {Message}", e.Message);
+            Log.CloseAndFlush();
+        };
     }
 
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();

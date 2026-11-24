@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Serilog;
 using StudentCabinetMVVM.Data;
 using StudentCabinetMVVM.Services;
 using StudentCabinetMVVM.ViewModels;
@@ -9,6 +10,10 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        Log.Logger = LoggingConfiguration.CreateLogger();
+        LoggingConfiguration.RegisterGlobalHandlers();
+        Log.Information("Запуск застосунку StudentCabinetMVVM");
+
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
@@ -18,6 +23,8 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+        builder.Logging.AddSerilog(Log.Logger, dispose: true);
+
         var dbPath = Path.Combine(FileSystem.AppDataDirectory, "students.db3");
 
         builder.Services.AddSingleton<IAppStateService, AppStateService>();
@@ -25,12 +32,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IEncryptionService, AesEncryptionService>();
         builder.Services.AddSingleton<IStudentRepository, StudentRepository>();
         builder.Services.AddSingleton<ISyncService, SyncService>();
+
         builder.Services.AddTransient<StudentViewModel>();
         builder.Services.AddTransient<MainPage>();
-
-#if DEBUG
-        builder.Logging.AddDebug();
-#endif
 
         return builder.Build();
     }
