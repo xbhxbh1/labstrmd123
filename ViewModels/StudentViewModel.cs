@@ -16,6 +16,8 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
     private readonly IAppStateService _state;
     private readonly IStudentRepository _repository;
     private readonly ISyncService _sync;
+    private readonly ISessionService _session;
+    private readonly IAuthService _auth;
     private readonly ILogger<StudentViewModel> _logger;
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private Student _student = new();
@@ -86,6 +88,13 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
 
     public string PendingText => $"У черзі синхронізації: {PendingCount}";
 
+    public string CurrentUserText => _session.CurrentRole is { } role
+        ? $"Користувач: {_session.UserName} ({role.ToDisplayName()})"
+        : "Користувач не увійшов";
+
+    // Пункт «Керування користувачами» видно лише адміністратору (прив'язка IsVisible у MainPage.xaml)
+    public bool IsAdminPanelVisible => _session.IsInRole(UserRole.Administrator);
+
     public ObservableCollection<Student> Students { get; } = new();
 
     public ICommand AddStudentCommand { get; }
@@ -100,15 +109,23 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
 
     public ICommand SyncCommand { get; }
 
+    public ICommand OpenUsersCommand { get; }
+
+    public ICommand LogoutCommand { get; }
+
     public StudentViewModel(
         IAppStateService state,
         IStudentRepository repository,
         ISyncService sync,
+        ISessionService session,
+        IAuthService auth,
         ILogger<StudentViewModel> logger)
     {
         _state = state;
         _repository = repository;
         _sync = sync;
+        _session = session;
+        _auth = auth;
         _logger = logger;
 
         AddStudentCommand = new Command(async () => await AddStudentAsync(), CanAddStudent);
@@ -120,6 +137,14 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
         OpenSettingsCommand = new Command(async () =>
             await Shell.Current.GoToAsync("settings"));
         SyncCommand = new Command(async () => await SyncNowAsync());
+        OpenUsersCommand = new Command(async () => await OpenUsersAsync());
+        LogoutCommand = new Command(async () => await LogoutAsync());
+
+        _session.SessionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(CurrentUserText));
+            OnPropertyChanged(nameof(IsAdminPanelVisible));
+        };
 
         _state.StateRestored += (_, _) => LoadDraft();
         _state.DeepLinkReceived += async (_, _) => await HandleDeepLinkAsync();
@@ -206,6 +231,13 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
     {
         if (student is null) return;
 
+        // Другий рівень захисту: перевірка ролі в самій команді, а не лише приховування кнопки
+        if (!_session.IsInRole(UserRole.Administrator))
+        {
+            await DenyAccessAsync($"видалення студента Id={student.Id}");
+            return;
+        }
+
         try
         {
             await _repository.DeleteAsync(student);
@@ -220,6 +252,32 @@ public class StudentViewModel : INotifyPropertyChanged, IQueryAttributable
         }
 
         await AfterChangeAsync();
+    }
+
+    private async Task OpenUsersAsync()
+    {
+        if (!_session.IsInRole(UserRole.Administrator))
+        {
+            await DenyAccessAsync("відкриття розділу «Керування користувачами»");
+            return;
+        }
+
+        await Shell.Current.GoToAsync("users");
+    }
+
+    private async Task LogoutAsync()
+    {
+        _auth.Logout();
+        await Shell.Current.GoToAsync("//LoginPage");
+    }
+
+    private async Task DenyAccessAsync(string action)
+    {
+        _logger.LogWarning("Відмовлено в доступі: користувач {User} (роль {Role}) намагався виконати дію «{Action}»",
+            _session.UserName, _session.CurrentRole, action);
+
+        await Shell.Current.DisplayAlert("Доступ заборонено",
+            "Дія доступна лише адміністратору.", "OK");
     }
 
     private async Task OpenDetailsAsync(Student student)
