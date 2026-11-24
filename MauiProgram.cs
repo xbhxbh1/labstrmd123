@@ -39,6 +39,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISessionService, SessionService>();
         builder.Services.AddSingleton<IAuthApi, HttpAuthApi>();
         builder.Services.AddSingleton<IAuthService, AuthService>();
+#if WINDOWS
+        builder.Services.AddSingleton<IBiometricService, StudentCabinetMVVM.WinUI.WindowsBiometricService>();
+#else
+        builder.Services.AddSingleton<IBiometricService, NoBiometricService>();
+#endif
 
         builder.Services.AddTransient<StudentViewModel>();
         builder.Services.AddTransient<MainPage>();

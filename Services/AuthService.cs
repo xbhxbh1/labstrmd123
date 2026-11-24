@@ -71,6 +71,35 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<bool> HasStoredTokenAsync() =>
+        !string.IsNullOrEmpty(await GetTokenAsync());
+
+    public async Task<AuthResult> LoginWithStoredTokenAsync()
+    {
+        var token = await GetTokenAsync();
+        if (string.IsNullOrEmpty(token))
+            return AuthResult.Fail("Збережений токен відсутній. Увійдіть за допомогою пароля.");
+
+        if (!JwtParser.TryParse(token, out var claims))
+        {
+            _logger.LogWarning("Збережений токен має некоректний формат і буде видалений");
+            SecureStorage.Default.Remove(TokenKey);
+            return AuthResult.Fail("Збережений токен пошкоджено. Увійдіть за допомогою пароля.");
+        }
+
+        if (claims.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            _logger.LogInformation("Термін дії збереженого токена користувача {User} минув", claims.UserName);
+            SecureStorage.Default.Remove(TokenKey);
+            return AuthResult.Fail("Термін дії збереженого токена минув. Увійдіть за допомогою пароля.");
+        }
+
+        _session.SignIn(claims.Role, claims.UserName);
+        _logger.LogInformation("Вхід за збереженим токеном після біометрії: {User}, роль {Role}",
+            claims.UserName, claims.Role);
+        return AuthResult.Ok();
+    }
+
     public void Logout()
     {
         SecureStorage.Default.Remove(TokenKey);

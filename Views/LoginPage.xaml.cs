@@ -9,4 +9,13 @@ public partial class LoginPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        // після виходу токен видаляється, тому доступність біометричного входу перевіряється щоразу
+        if (BindingContext is LoginViewModel vm)
+            vm.InitializeCommand.Execute(null);
+    }
 }
