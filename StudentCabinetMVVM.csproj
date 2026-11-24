@@ -21,6 +21,8 @@
     <Nullable>enable</Nullable>
     <!-- MVVMTK0045: попередження про AOT-сумісність [ObservableProperty] у WinRT-сценаріях, для цього проєкту не актуальне -->
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
+    <!-- Тестовий сервер (stub) - окремий проєкт, його файли не повинні потрапляти до збірки застосунку -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);stub\**</DefaultItemExcludes>
 
     <!-- Display name -->
     <ApplicationTitle>StudentCabinetMVVM</ApplicationTitle>
