@@ -15,24 +15,24 @@ public class JwtParserTests
     public void TryParse_ValidToken_ReadsUserRoleAndExpiry()
     {
         var expires = DateTimeOffset.UtcNow.AddHours(1);
-        var token = JwtFactory.Create("admin", "Administrator", expires);
+        var token = JwtFactory.Create("admin", "Accountant", expires);
 
         var ok = JwtParser.TryParse(token, out var claims);
 
         ok.Should().BeTrue();
         claims.UserName.Should().Be("admin");
-        claims.Role.Should().Be(UserRole.Administrator);
+        claims.Role.Should().Be(UserRole.Accountant);
         claims.ExpiresAt.ToUnixTimeSeconds().Should().Be(expires.ToUnixTimeSeconds());
     }
 
     [Fact]
     public void TryParse_SeveralRoles_TakesTheHighestOne()
     {
-        var token = JwtFactory.Create("u", new[] { "Teacher", "Administrator" }, DateTimeOffset.UtcNow.AddHours(1));
+        var token = JwtFactory.Create("u", new[] { "StationOperator", "Accountant" }, DateTimeOffset.UtcNow.AddHours(1));
 
         JwtParser.TryParse(token, out var claims).Should().BeTrue();
 
-        claims.Role.Should().Be(UserRole.Administrator);
+        claims.Role.Should().Be(UserRole.Accountant);
     }
 
     [Theory]
@@ -191,11 +191,11 @@ public class SessionServiceTests
         var raised = 0;
         session.SessionChanged += (_, _) => raised++;
 
-        session.SignIn(UserRole.Teacher, "teacher");
+        session.SignIn(UserRole.StationOperator, "teacher");
 
         session.IsAuthenticated.Should().BeTrue();
-        session.IsInRole(UserRole.Teacher).Should().BeTrue();
-        session.IsInRole(UserRole.Administrator).Should().BeFalse();
+        session.IsInRole(UserRole.StationOperator).Should().BeTrue();
+        session.IsInRole(UserRole.Accountant).Should().BeFalse();
         session.UserName.Should().Be("teacher");
         raised.Should().Be(1);
     }
@@ -204,13 +204,13 @@ public class SessionServiceTests
     public void SignOut_ClearsTheSession()
     {
         var session = new SessionService();
-        session.SignIn(UserRole.Administrator, "admin");
+        session.SignIn(UserRole.Accountant, "admin");
 
         session.SignOut();
 
         session.IsAuthenticated.Should().BeFalse();
         session.CurrentRole.Should().BeNull();
-        session.IsInRole(UserRole.Administrator).Should().BeFalse();
+        session.IsInRole(UserRole.Accountant).Should().BeFalse();
     }
 }
 
@@ -225,14 +225,14 @@ public class AuthServiceTests
     [Fact]
     public async Task Login_Success_StoresTokenAndSignsIn()
     {
-        var token = JwtFactory.Create("admin", "Administrator", DateTimeOffset.UtcNow.AddHours(1));
+        var token = JwtFactory.Create("admin", "Accountant", DateTimeOffset.UtcNow.AddHours(1));
         _api.Setup(a => a.AuthenticateAsync("admin", "pw", It.IsAny<CancellationToken>())).ReturnsAsync(token);
 
         var result = await CreateSut().LoginAsync("admin", "pw");
 
         result.Success.Should().BeTrue();
         _store.Values["auth_token"].Should().Be(token);
-        _session.IsInRole(UserRole.Administrator).Should().BeTrue();
+        _session.IsInRole(UserRole.Accountant).Should().BeTrue();
     }
 
     [Fact]
@@ -275,18 +275,18 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginWithStoredToken_ValidToken_SignsInWithoutPassword()
     {
-        _store.Values["auth_token"] = JwtFactory.Create("teacher", "Teacher", DateTimeOffset.UtcNow.AddMinutes(30));
+        _store.Values["auth_token"] = JwtFactory.Create("teacher", "StationOperator", DateTimeOffset.UtcNow.AddMinutes(30));
 
         var result = await CreateSut().LoginWithStoredTokenAsync();
 
         result.Success.Should().BeTrue();
-        _session.IsInRole(UserRole.Teacher).Should().BeTrue();
+        _session.IsInRole(UserRole.StationOperator).Should().BeTrue();
     }
 
     [Fact]
     public async Task LoginWithStoredToken_ExpiredToken_IsRemovedAndRefused()
     {
-        _store.Values["auth_token"] = JwtFactory.Create("teacher", "Teacher", DateTimeOffset.UtcNow.AddMinutes(-5));
+        _store.Values["auth_token"] = JwtFactory.Create("teacher", "StationOperator", DateTimeOffset.UtcNow.AddMinutes(-5));
 
         var result = await CreateSut().LoginWithStoredTokenAsync();
 
@@ -298,7 +298,7 @@ public class AuthServiceTests
     [Fact]
     public async Task Logout_RemovesTokenAndClearsSession()
     {
-        _store.Values["auth_token"] = JwtFactory.Create("admin", "Administrator", DateTimeOffset.UtcNow.AddHours(1));
+        _store.Values["auth_token"] = JwtFactory.Create("admin", "Accountant", DateTimeOffset.UtcNow.AddHours(1));
         var sut = CreateSut();
         await sut.LoginWithStoredTokenAsync();
 

@@ -48,7 +48,7 @@ public partial class StudentViewModel : ObservableObject, IQueryReceiver
         : "Користувач не увійшов";
 
     // Пункт «Керування користувачами» видно лише адміністратору (прив'язка IsVisible у MainPage.xaml)
-    public bool IsAdminPanelVisible => _session.IsInRole(UserRole.Administrator);
+    public bool IsAdminPanelVisible => _session.IsInRole(UserRole.Accountant);
 
     public ObservableCollection<Student> Students { get; } = new();
 
@@ -175,7 +175,7 @@ public partial class StudentViewModel : ObservableObject, IQueryReceiver
         if (student is null) return;
 
         // Другий рівень захисту: перевірка ролі в самій команді, а не лише приховування кнопки
-        if (!_session.IsInRole(UserRole.Administrator))
+        if (!_session.IsInRole(UserRole.Accountant))
         {
             await DenyAccessAsync($"видалення студента Id={student.Id}");
             return;
@@ -200,7 +200,7 @@ public partial class StudentViewModel : ObservableObject, IQueryReceiver
     [RelayCommand]
     private async Task OpenUsersAsync()
     {
-        if (!_session.IsInRole(UserRole.Administrator))
+        if (!_session.IsInRole(UserRole.Accountant))
         {
             await DenyAccessAsync("відкриття розділу «Керування користувачами»");
             return;

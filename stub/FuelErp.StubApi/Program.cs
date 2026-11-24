@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -7,9 +8,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
-// Тестовий сервер для лабораторних робіт 4-6 (НЕ для реального використання).
-//   http://localhost:5099   - синхронізація (лаб. 4) та автентифікація без шифрування
-//   https://localhost:5443  - автентифікація через HTTPS (сертифікат закріплюється в застосунку, лаб. 6)
+// Тестовий сервер для модуля обліку палива (НЕ для реального використання).
+//   http://localhost:5099   - синхронізація офлайн-змін та автентифікація без шифрування
+//   https://localhost:5443  - автентифікація через HTTPS (сертифікат закріплюється в застосунку)
 // Параметр --rogue підміняє сертифікат на випадковий: так імітується атака "людина посередині".
 
 const string Issuer = "FuelErp.StubApi";
@@ -20,9 +21,12 @@ var rogue = args.Contains("--rogue");
 
 var users = new Dictionary<string, (string Password, string Role)>(StringComparer.OrdinalIgnoreCase)
 {
-    ["admin"] = ("Admin#2024", "Administrator"),
-    ["teacher"] = ("Teacher#2024", "Teacher")
+    ["operator"] = ("Operator#2024", "StationOperator"),
+    ["accountant"] = ("Accountant#2024", "Accountant")
 };
+
+// Серверна копія синхронізованих записів: ключ "Тип:Id" -> час останньої зміни (стратегія "останній запис перемагає")
+var versions = new ConcurrentDictionary<string, DateTime>();
 
 var signingKey = new SymmetricSecurityKey(
     Encoding.UTF8.GetBytes("FuelErp-stub-signing-key-0123456789-ABCDEF"));
@@ -93,12 +97,44 @@ app.MapPost("/api/auth/login", (LoginRequest request) =>
 
 // Серверна перевірка ролі: клієнтській перевірці довіряти не можна.
 app.MapGet("/api/users", () => users.Select(u => new UserDto(u.Key, u.Value.Role)))
-    .RequireAuthorization(policy => policy.RequireRole("Administrator"));
+    .RequireAuthorization(policy => policy.RequireRole("Accountant"));
 
-app.MapPost("/api/sync", (JsonElement body) =>
+// Приймає записи черги офлайн-змін. Конфлікти розв'язуються за часом зміни: приймається лише новіша версія.
+app.MapPost("/api/sync", (SyncItem item) =>
 {
-    app.Logger.LogInformation("Синхронізація: отримано {Body}", body.GetRawText());
-    return Results.Ok();
+    string key;
+    DateTime updatedAt;
+
+    try
+    {
+        using var payload = JsonDocument.Parse(item.PayloadJson);
+        var root = payload.RootElement;
+        key = $"{item.EntityType}:{root.GetProperty("Id").GetInt32()}";
+        updatedAt = root.TryGetProperty("UpdatedAt", out var stamp) && stamp.TryGetDateTime(out var parsed)
+            ? parsed.ToUniversalTime()
+            : DateTime.UtcNow;
+    }
+    catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
+    {
+        app.Logger.LogWarning("Синхронізація: запис не розпізнано ({Type}/{Operation})", item.EntityType, item.Operation);
+        return Results.BadRequest("Невідомий формат запису");
+    }
+
+    var applied = true;
+    versions.AddOrUpdate(key, updatedAt, (_, existing) =>
+    {
+        if (existing > updatedAt)
+        {
+            applied = false;
+            return existing;
+        }
+
+        return updatedAt;
+    });
+
+    app.Logger.LogInformation("Синхронізація: {Key} {Operation} {Result}", key, item.Operation,
+        applied ? "прийнято" : "відхилено (на сервері новіша версія)");
+    return Results.Ok(new SyncResult(applied));
 });
 
 if (rogue)
@@ -124,3 +160,7 @@ record LoginRequest(string? Login, string? Password);
 record LoginResponse(string AccessToken, DateTime ExpiresAt);
 
 record UserDto(string Login, string Role);
+
+record SyncItem(string EntityType, string Operation, string PayloadJson);
+
+record SyncResult(bool Applied);

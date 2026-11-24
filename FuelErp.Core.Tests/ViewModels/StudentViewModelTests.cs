@@ -146,7 +146,7 @@ public class StudentViewModelTests
     [Fact]
     public async Task Delete_AsTeacher_IsDeniedAndRepositoryNotCalled()
     {
-        SignInAs(UserRole.Teacher);
+        SignInAs(UserRole.StationOperator);
         var vm = CreateSut();
 
         await vm.DeleteStudentCommand.ExecuteAsync(new Student { Id = 1 });
@@ -159,7 +159,7 @@ public class StudentViewModelTests
     [Fact]
     public async Task Delete_AsAdministrator_RemovesStudentFromRepositoryAndList()
     {
-        SignInAs(UserRole.Administrator);
+        SignInAs(UserRole.Accountant);
         var student = new Student { Id = 7, FullName = "Іваненко Іван" };
         _repo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Student> { student });
         var vm = CreateSut();
@@ -189,8 +189,8 @@ public class StudentViewModelTests
     }
 
     [Theory]
-    [InlineData(UserRole.Administrator, true)]
-    [InlineData(UserRole.Teacher, false)]
+    [InlineData(UserRole.Accountant, true)]
+    [InlineData(UserRole.StationOperator, false)]
     public void IsAdminPanelVisible_DependsOnRole(UserRole role, bool expected)
     {
         SignInAs(role);
@@ -202,7 +202,7 @@ public class StudentViewModelTests
     [Fact]
     public async Task OpenUsers_AsTeacher_IsDeniedWithoutNavigation()
     {
-        SignInAs(UserRole.Teacher);
+        SignInAs(UserRole.StationOperator);
         var vm = CreateSut();
 
         await vm.OpenUsersCommand.ExecuteAsync(null);
@@ -214,7 +214,7 @@ public class StudentViewModelTests
     [Fact]
     public async Task OpenUsers_AsAdministrator_NavigatesToUsersPage()
     {
-        SignInAs(UserRole.Administrator);
+        SignInAs(UserRole.Accountant);
         var vm = CreateSut();
 
         await vm.OpenUsersCommand.ExecuteAsync(null);

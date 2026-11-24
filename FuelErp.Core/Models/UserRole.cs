@@ -2,16 +2,16 @@ namespace FuelErp.Models;
 
 public enum UserRole
 {
-    Teacher,
-    Administrator
+    StationOperator,
+    Accountant
 }
 
 public static class UserRoleExtensions
 {
     public static string ToDisplayName(this UserRole role) => role switch
     {
-        UserRole.Administrator => "Адміністратор",
-        UserRole.Teacher => "Викладач",
+        UserRole.Accountant => "Бухгалтер",
+        UserRole.StationOperator => "Оператор АЗС",
         _ => role.ToString()
     };
 }

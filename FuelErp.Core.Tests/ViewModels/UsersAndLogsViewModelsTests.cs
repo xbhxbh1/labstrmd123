@@ -33,7 +33,7 @@ public class UsersViewModelTests
     {
         _auth.Setup(a => a.GetTokenAsync()).ReturnsAsync("token");
         _api.Setup(a => a.GetUsersAsync("token", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<UserInfo> { new("admin", "Administrator"), new("teacher", "Teacher") });
+            .ReturnsAsync(new List<UserInfo> { new("admin", "Accountant"), new("teacher", "StationOperator") });
         var vm = CreateSut();
 
         await vm.LoadCommand.ExecuteAsync(null);
