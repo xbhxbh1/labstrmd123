@@ -24,6 +24,10 @@
     <Nullable>enable</Nullable>
     <!-- MVVMTK0045: попередження про AOT-сумісність [ObservableProperty] у WinRT-сценаріях, для цього проєкту не актуальне -->
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
+    <!-- Робоче навантаження .NET MAUI 8 більше не підтримується Microsoft (NETSDK1202); для навчального проєкту
+         на .NET 8 вимикаємо цю перевірку, інакше збирання Android на GitHub Actions завершується помилкою -->
+    <CheckEolWorkloads>false</CheckEolWorkloads>
+    <NoWarn>$(NoWarn);NETSDK1202</NoWarn>
 
     <!-- Display name -->
     <ApplicationTitle>StudentCabinetMVVM</ApplicationTitle>
