@@ -7,6 +7,9 @@ namespace FuelErp.Services;
 
 public class SyncService : ISyncService
 {
+    // Відповідь тестового сервера на /api/sync
+    private sealed record SyncResult(bool Applied);
+
     private readonly AppDatabase _database;
     private readonly IConnectivity _connectivity;
     private readonly ILogger<SyncService> _logger;
@@ -69,10 +72,23 @@ public class SyncService : ISyncService
                     break;
                 }
 
+                // Стратегія конфліктів - «останній запис виграє»: сервер порівнює UpdatedAt і відповідає, чи прийняв зміну
+                var result = await response.Content.ReadFromJsonAsync<SyncResult>();
+
                 await db.DeleteAsync(item);
                 sent++;
-                _logger.LogInformation("Відправлено на сервер: {Operation} (запис черги #{QueueId})",
-                    item.Operation, item.Id);
+
+                if (result is { Applied: false })
+                {
+                    _logger.LogWarning(
+                        "Конфлікт синхронізації: на сервері новіша версія, зміну {Operation} (запис черги #{QueueId}) відхилено",
+                        item.Operation, item.Id);
+                }
+                else
+                {
+                    _logger.LogInformation("Відправлено на сервер: {Operation} (запис черги #{QueueId})",
+                        item.Operation, item.Id);
+                }
             }
         }
         catch (Exception ex)
