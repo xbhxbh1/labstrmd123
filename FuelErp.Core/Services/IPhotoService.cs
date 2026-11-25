@@ -11,10 +11,10 @@ public enum PhotoStatus
 
 public record PhotoResult(PhotoStatus Status, string? Path = null);
 
-/// <summary>Фото дефекту: зйомка камерою або вибір із галереї з копіюванням файла в каталог застосунку.</summary>
+/// <summary>Фото чека або лічильника: зйомка камерою або вибір із галереї з копіюванням файла в каталог застосунку.</summary>
 public interface IPhotoService
 {
-    Task<PhotoResult> TakePhotoAsync(string roomNumber);
+    Task<PhotoResult> TakePhotoAsync(string label);
 
-    Task<PhotoResult> PickPhotoAsync(string roomNumber);
+    Task<PhotoResult> PickPhotoAsync(string label);
 }

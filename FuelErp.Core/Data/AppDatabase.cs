@@ -78,7 +78,6 @@ public class AppDatabase
         await connection.CreateTableAsync<FuelTankRecord>();
         await connection.CreateTableAsync<RefuelingRecord>();
         await connection.CreateTableAsync<SyncQueueItem>();
-        await CreateLegacyTablesAsync(connection);
     }
 
     private static async Task MigrateAsync(SQLiteAsyncConnection connection, int fromVersion)
@@ -93,10 +92,4 @@ public class AppDatabase
         }
     }
 
-    // Таблиці попередніх лабораторних робіт існують лише до завершення переходу на модуль обліку палива
-    private static async Task CreateLegacyTablesAsync(SQLiteAsyncConnection connection)
-    {
-        await connection.CreateTableAsync<StudentRecord>();
-        await connection.CreateTableAsync<RoomInspectionRecord>();
-    }
 }

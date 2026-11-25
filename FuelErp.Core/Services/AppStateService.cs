@@ -5,10 +5,7 @@ namespace FuelErp.Services;
 
 public class AppStateService : IAppStateService
 {
-    private const string DraftFullNameKey = "draft_fullname";
-    private const string DraftGroupKey = "draft_group";
-    private const string DraftScoreKey = "draft_score";
-    private const string StudentsKey = "students_json";
+    private const string DraftKey = "refueling_draft_json";
 
     private readonly ISettingsService _settings;
     private string? _pendingDeepLink;
@@ -20,11 +17,7 @@ public class AppStateService : IAppStateService
 
     public DateTime SessionStartedAt { get; } = DateTime.Now;
 
-    public string DraftFullName { get; set; } = string.Empty;
-    public string DraftGroup { get; set; } = string.Empty;
-    public double DraftAverageScore { get; set; }
-
-    public List<Student> Students { get; set; } = new();
+    public RefuelingDraft? Draft { get; set; }
 
     public string? PendingDeepLink
     {
@@ -42,22 +35,22 @@ public class AppStateService : IAppStateService
 
     public void Save()
     {
-        _settings.Set(DraftFullNameKey, DraftFullName);
-        _settings.Set(DraftGroupKey, DraftGroup);
-        _settings.Set(DraftScoreKey, DraftAverageScore);
-        _settings.Set(StudentsKey, JsonSerializer.Serialize(Students));
+        var json = Draft is null || Draft.IsEmpty ? string.Empty : JsonSerializer.Serialize(Draft);
+        _settings.Set(DraftKey, json);
     }
 
     public void Restore()
     {
-        DraftFullName = _settings.Get(DraftFullNameKey, string.Empty);
-        DraftGroup = _settings.Get(DraftGroupKey, string.Empty);
-        DraftAverageScore = _settings.Get(DraftScoreKey, 0.0);
+        var json = _settings.Get(DraftKey, string.Empty);
 
-        var json = _settings.Get(StudentsKey, string.Empty);
-        Students = string.IsNullOrEmpty(json)
-            ? new List<Student>()
-            : JsonSerializer.Deserialize<List<Student>>(json) ?? new List<Student>();
+        try
+        {
+            Draft = string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<RefuelingDraft>(json);
+        }
+        catch (JsonException)
+        {
+            Draft = null;
+        }
 
         StateRestored?.Invoke(this, EventArgs.Empty);
     }

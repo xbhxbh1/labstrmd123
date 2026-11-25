@@ -8,55 +8,6 @@ using FuelErp.ViewModels;
 
 namespace FuelErp.Tests.ViewModels;
 
-public class StudentDetailViewModelTests
-{
-    private readonly Mock<INavigationService> _nav = new();
-
-    [Fact]
-    public void ApplyQuery_FillsFieldsFromSelectedStudent()
-    {
-        var vm = new StudentDetailViewModel(_nav.Object);
-
-        vm.ApplyQuery(new Dictionary<string, object>
-        {
-            ["SelectedStudent"] = new Student { FullName = "Іваненко Іван", Group = "КН-31", AverageScore = 4.1 }
-        });
-
-        vm.FullName.Should().Be("Іваненко Іван");
-        vm.Group.Should().Be("КН-31");
-        vm.AverageScore.Should().Be(4.1);
-    }
-
-    [Fact]
-    public async Task Save_GoesBackWithUpdatedStudent()
-    {
-        var student = new Student { Id = 4, FullName = "Іваненко Іван", AverageScore = 3.0 };
-        IDictionary<string, object>? passed = null;
-        _nav.Setup(n => n.GoBackAsync(It.IsAny<IDictionary<string, object>?>()))
-            .Callback<IDictionary<string, object>?>(p => passed = p)
-            .Returns(Task.CompletedTask);
-        var vm = new StudentDetailViewModel(_nav.Object);
-        vm.ApplyQuery(new Dictionary<string, object> { ["SelectedStudent"] = student });
-        vm.AverageScore = 4.6;
-
-        await vm.SaveCommand.ExecuteAsync(null);
-
-        student.AverageScore.Should().Be(4.6);
-        passed.Should().NotBeNull();
-        passed!["UpdatedStudent"].Should().BeSameAs(student);
-    }
-
-    [Fact]
-    public async Task Save_WithoutStudent_DoesNotNavigate()
-    {
-        var vm = new StudentDetailViewModel(_nav.Object);
-
-        await vm.SaveCommand.ExecuteAsync(null);
-
-        _nav.Verify(n => n.GoBackAsync(It.IsAny<IDictionary<string, object>?>()), Times.Never);
-    }
-}
-
 public class SettingsViewModelTests
 {
     private readonly FakeSettings _settings = new();
