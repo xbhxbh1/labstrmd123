@@ -9,7 +9,7 @@ namespace FuelErp;
     new[] { Intent.ActionView },
     Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable },
     DataScheme = "fuelerp",
-    DataHost = "student")]
+    DataHost = "refueling")]
 public class MainActivity : MauiAppCompatActivity
 {
 }

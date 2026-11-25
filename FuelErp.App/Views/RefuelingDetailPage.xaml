@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FuelErp.Views.RefuelingDetailPage"
+             Title="Картка заправки">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="10">
+
+            <Label Text="{Binding Refueling.Title}"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   AutomationId="DetailTitleLabel" />
+
+            <Label Text="{Binding Refueling.Subtitle}" />
+            <Label Text="{Binding Refueling.TankName, StringFormat='Резервуар: {0}'}" />
+            <Label Text="{Binding Refueling.DriverName, StringFormat='Водій: {0}'}" />
+            <Label Text="{Binding Refueling.PricePerLiter, StringFormat='Ціна за літр: {0:N2} грн'}" />
+            <Label Text="{Binding Refueling.Total, StringFormat='Сума: {0:N2} грн'}" FontAttributes="Bold" />
+            <Label Text="{Binding Refueling.OperatorName, StringFormat='Оператор: {0}'}" />
+            <Label Text="{Binding Refueling.Notes, StringFormat='Примітки: {0}'}" />
+
+            <Label Text="Фото чека або лічильника" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Image Source="{Binding Refueling.ReceiptPhotoPath}"
+                   IsVisible="{Binding Refueling.HasPhoto}"
+                   HeightRequest="240"
+                   Aspect="AspectFit"
+                   AutomationId="DetailPhoto" />
+
+            <Label Text="{Binding Refueling.LocationText}"
+                   AutomationId="DetailLocationLabel" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Редагувати"
+                        Command="{Binding EditCommand}"
+                        IsVisible="{Binding CanEdit}"
+                        AutomationId="EditRefuelingButton" />
+                <Button Text="Відкрити на карті"
+                        Command="{Binding OpenOnMapCommand}"
+                        IsEnabled="{Binding Refueling.HasLocation}"
+                        AutomationId="OpenOnMapButton" />
+                <Button Text="Назад"
+                        Command="{Binding GoBackCommand}"
+                        AutomationId="BackButton" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

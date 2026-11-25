@@ -27,6 +27,7 @@ public partial class RefuelingEditViewModel : ObservableObject, IQueryReceiver
     private readonly ILogger<RefuelingEditViewModel> _logger;
     private Refueling? _editing;
     private bool _restoring;
+    private bool _isLoaded;
 
     public ObservableCollection<Vehicle> Vehicles { get; } = new();
 
@@ -288,6 +289,10 @@ public partial class RefuelingEditViewModel : ObservableObject, IQueryReceiver
     [RelayCommand]
     private async Task LoadAsync()
     {
+        // сторінка може з'являтися знову (наприклад, після камери): введені дані не затираються
+        if (_isLoaded)
+            return;
+
         try
         {
             var vehicles = await _vehicles.GetAllAsync();
@@ -305,6 +310,8 @@ public partial class RefuelingEditViewModel : ObservableObject, IQueryReceiver
                 FillFromEditing();
             else if (_state.Draft is { IsEmpty: false } draft)
                 RestoreDraft(draft);
+
+            _isLoaded = true;
         }
         catch (Exception ex)
         {

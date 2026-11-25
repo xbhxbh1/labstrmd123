@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:FuelErp.Converters"
+             x:Class="FuelErp.Views.TanksPage"
+             Title="Резервуари">
+
+    <ContentPage.Resources>
+        <conv:TankLevelColorConverter x:Key="TankLevelColorConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="16" RowSpacing="8">
+        <Label Text="Резервуари та залишки"
+               FontSize="22"
+               FontAttributes="Bold" />
+
+        <Label Grid.Row="1"
+               Text="{Binding Status}"
+               AutomationId="TanksStatusLabel" />
+
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Tanks}"
+                        AutomationId="TanksCollection">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="0,8" Spacing="4">
+                        <Label Text="{Binding DisplayName}" FontAttributes="Bold" />
+                        <!-- візуальна індикація стану: колір залежить від LevelState через конвертер -->
+                        <ProgressBar Progress="{Binding FillFraction}"
+                                     ProgressColor="{Binding LevelState, Converter={StaticResource TankLevelColorConverter}}" />
+                        <Label Text="{Binding LevelText}"
+                               TextColor="{Binding LevelState, Converter={StaticResource TankLevelColorConverter}}" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button Grid.Row="3"
+                Text="Назад"
+                Command="{Binding GoBackCommand}"
+                AutomationId="BackButton" />
+    </Grid>
+</ContentPage>

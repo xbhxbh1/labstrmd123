@@ -2,9 +2,9 @@ using FuelErp.ViewModels;
 
 namespace FuelErp.Views;
 
-public partial class InspectionsMapPage : ContentPage
+public partial class VehiclesPage : ContentPage
 {
-    public InspectionsMapPage(InspectionsMapViewModel viewModel)
+    public VehiclesPage(VehiclesViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
@@ -14,7 +14,7 @@ public partial class InspectionsMapPage : ContentPage
     {
         base.OnAppearing();
 
-        if (BindingContext is InspectionsMapViewModel vm)
+        if (BindingContext is VehiclesViewModel vm)
             vm.LoadCommand.Execute(null);
     }
 }

@@ -3,9 +3,9 @@ using FuelErp.ViewModels;
 
 namespace FuelErp.Views;
 
-public partial class StudentDetailPage : ContentPage, IQueryAttributable
+public partial class RefuelingDetailPage : ContentPage, IQueryAttributable
 {
-    public StudentDetailPage(StudentDetailViewModel viewModel)
+    public RefuelingDetailPage(RefuelingDetailViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;

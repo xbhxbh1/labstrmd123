@@ -1,107 +1,114 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:conv="clr-namespace:FuelErp.Converters"
              x:Class="FuelErp.MainPage"
              x:Name="MainPageRoot"
-             Title="Особистий кабінет студента">
+             Title="Облік палива">
 
-    <ContentPage.Resources>
-        <conv:HighScoreColorConverter x:Key="HighScoreColorConverter" />
-    </ContentPage.Resources>
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24" Spacing="12">
-
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                <Label Text="{Binding CurrentUserText}"
-                       VerticalOptions="Center"
-                       AutomationId="CurrentUserLabel" />
-
-                <Button Grid.Column="1"
-                        Text="Керування користувачами"
-                        Command="{Binding OpenUsersCommand}"
-                        IsVisible="{Binding IsAdminPanelVisible}"
-                        AutomationId="ManageUsersButton" />
-
-                <Button Grid.Column="2"
-                        Text="Акти огляду"
-                        Command="{Binding OpenInspectionsCommand}"
-                        AutomationId="OpenInspectionsButton" />
-
-                <Button Grid.Column="3"
-                        Text="Налаштування"
-                        Command="{Binding OpenSettingsCommand}" />
-
-                <Button Grid.Column="4"
-                        Text="Вийти"
-                        Command="{Binding LogoutCommand}"
-                        AutomationId="LogoutButton" />
-            </Grid>
-
-            <Label Text="Особистий кабінет студента"
-                   FontSize="22"
+        <!-- Користувач, його роль і стан мережі -->
+        <HorizontalStackLayout Grid.Row="0" Spacing="16">
+            <Label Text="{Binding CurrentUserText}"
                    FontAttributes="Bold"
-                   HorizontalOptions="Center" />
+                   VerticalOptions="Center"
+                   AutomationId="CurrentUserLabel" />
+            <Label Text="{Binding NetworkText}"
+                   TextColor="Green"
+                   VerticalOptions="Center"
+                   AutomationId="NetworkIndicator">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding IsOnline}" Value="False">
+                        <Setter Property="TextColor" Value="OrangeRed" />
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+        </HorizontalStackLayout>
 
-            <Entry Text="{Binding FullName, Mode=TwoWay}"
-                   Placeholder="ПІБ студента"
-                   AutomationId="FullNameEntry" />
+        <!-- Дії: набір кнопок залежить від ролі (IsVisible прив'язано до властивостей ViewModel) -->
+        <FlexLayout Grid.Row="1" Wrap="Wrap" AlignItems="Center">
+            <Button Text="Нова заправка"
+                    Command="{Binding NewRefuelingCommand}"
+                    IsVisible="{Binding CanCreate}"
+                    AutomationId="NewRefuelingButton"
+                    Margin="0,0,8,6" />
+            <Button Text="Резервуари"
+                    Command="{Binding OpenTanksCommand}"
+                    AutomationId="TanksButton"
+                    Margin="0,0,8,6" />
+            <Button Text="Транспорт"
+                    Command="{Binding OpenVehiclesCommand}"
+                    AutomationId="VehiclesButton"
+                    Margin="0,0,8,6" />
+            <Button Text="Звіт"
+                    Command="{Binding OpenReportCommand}"
+                    IsVisible="{Binding IsAccountant}"
+                    AutomationId="ReportButton"
+                    Margin="0,0,8,6" />
+            <Button Text="Персонал"
+                    Command="{Binding OpenStaffCommand}"
+                    IsVisible="{Binding IsAccountant}"
+                    AutomationId="StaffButton"
+                    Margin="0,0,8,6" />
+            <Button Text="Синхронізувати"
+                    Command="{Binding SyncCommand}"
+                    AutomationId="SyncButton"
+                    Margin="0,0,8,6" />
+            <Button Text="Налаштування"
+                    Command="{Binding OpenSettingsCommand}"
+                    AutomationId="SettingsButton"
+                    Margin="0,0,8,6" />
+            <Button Text="Вийти"
+                    Command="{Binding LogoutCommand}"
+                    AutomationId="LogoutButton"
+                    Margin="0,0,8,6" />
+        </FlexLayout>
 
-            <Entry Text="{Binding Group, Mode=TwoWay}"
-                   Placeholder="Група"
-                   AutomationId="GroupEntry" />
+        <!-- Пошук і фільтр за видом палива -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,220" ColumnSpacing="8">
+            <Entry Placeholder="Пошук: номер авто, водій, резервуар"
+                   Text="{Binding SearchText, Mode=TwoWay}"
+                   AutomationId="SearchEntry" />
+            <Picker Grid.Column="1"
+                    Title="Вид палива"
+                    ItemsSource="{Binding Filters}"
+                    ItemDisplayBinding="{Binding Name}"
+                    SelectedItem="{Binding SelectedFilter, Mode=TwoWay}"
+                    AutomationId="FuelFilterPicker" />
+        </Grid>
 
-            <Label Text="{Binding AverageScore, StringFormat='Середній бал: {0:F2}'}" />
-            <Slider Minimum="0" Maximum="5"
-                    Value="{Binding AverageScore, Mode=TwoWay}" />
-
-            <Label Text="{Binding Greeting, Mode=OneWay}"
-                   FontAttributes="Bold"
-                   TextColor="{Binding AverageScore, Converter={StaticResource HighScoreColorConverter}}" />
-
-            <Button Text="Додати студента"
-                    Command="{Binding AddStudentCommand}"
-                    AutomationId="AddStudentButton" />
-
-            <HorizontalStackLayout Spacing="12">
-                <Label Text="{Binding PendingText}"
-                       VerticalOptions="Center"
-                       AutomationId="PendingLabel" />
-                <Button Text="Синхронізувати"
-                        Command="{Binding SyncCommand}"
-                        AutomationId="SyncButton" />
-            </HorizontalStackLayout>
-
-            <BoxView HeightRequest="1" Color="LightGray" Margin="0,12" />
-
-            <Label Text="Список студентів" FontAttributes="Bold" FontSize="18" />
-
-            <CollectionView ItemsSource="{Binding Students}"
-                            AutomationId="StudentsCollection">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Padding="0,6" ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                            <Label Text="{Binding FullName}" Grid.Column="0" VerticalOptions="Center"
-                                   AutomationId="StudentNameLabel" />
-                            <Label Text="{Binding Group}" Grid.Column="1" VerticalOptions="Center" />
-                            <Label Text="{Binding AverageScore, StringFormat='{0:F2}'}" Grid.Column="2" VerticalOptions="Center" />
-                            <Button Text="Детальніше"
-                                    Grid.Column="3"
-                                    AutomationId="StudentDetailsButton"
-                                    Command="{Binding BindingContext.OpenDetailsCommand, Source={x:Reference MainPageRoot}}"
-                                    CommandParameter="{Binding .}" />
-                            <Button Text="Видалити"
-                                    Grid.Column="4"
-                                    AutomationId="DeleteStudentButton"
-                                    Command="{Binding BindingContext.DeleteStudentCommand, Source={x:Reference MainPageRoot}}"
-                                    CommandParameter="{Binding .}" />
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
+        <VerticalStackLayout Grid.Row="3" Spacing="2">
+            <Label Text="{Binding SummaryText}" AutomationId="SummaryLabel" />
+            <Label Text="{Binding StatusMessage}" TextColor="Gray" FontSize="12" AutomationId="StatusLabel" />
+            <Label Text="{Binding PendingText}" FontSize="12" AutomationId="PendingLabel" />
         </VerticalStackLayout>
-    </ScrollView>
 
+        <CollectionView Grid.Row="4"
+                        ItemsSource="{Binding Refuelings}"
+                        AutomationId="RefuelingsCollection">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="0,6" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="{Binding Title}" FontAttributes="Bold" />
+                            <Label Text="{Binding Subtitle}" FontSize="12" />
+                            <Label Text="{Binding DriverName}" FontSize="12" Opacity="0.7" />
+                        </VerticalStackLayout>
+
+                        <Button Grid.Column="1"
+                                Text="Картка"
+                                AutomationId="RefuelingDetailsButton"
+                                Command="{Binding BindingContext.OpenDetailsCommand, Source={x:Reference MainPageRoot}}"
+                                CommandParameter="{Binding .}" />
+                        <Button Grid.Column="2"
+                                Text="Видалити"
+                                AutomationId="DeleteRefuelingButton"
+                                IsVisible="{Binding BindingContext.CanDelete, Source={x:Reference MainPageRoot}}"
+                                Command="{Binding BindingContext.DeleteRefuelingCommand, Source={x:Reference MainPageRoot}}"
+                                CommandParameter="{Binding .}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

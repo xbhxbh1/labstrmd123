@@ -10,8 +10,8 @@
                          VerticalOptions="Center"
                          WidthRequest="420">
 
-        <Label Text="Особистий кабінет студента"
-               FontSize="26"
+        <Label Text="Облік палива та мастильних матеріалів"
+               FontSize="22"
                FontAttributes="Bold"
                HorizontalOptions="Center" />
 

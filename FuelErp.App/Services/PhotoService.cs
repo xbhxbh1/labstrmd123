@@ -15,11 +15,11 @@ public class PhotoService : IPhotoService
         _logger = logger;
     }
 
-    public Task<PhotoResult> TakePhotoAsync(string roomNumber) => RunAsync(roomNumber, capture: true);
+    public Task<PhotoResult> TakePhotoAsync(string label) => RunAsync(label, capture: true);
 
-    public Task<PhotoResult> PickPhotoAsync(string roomNumber) => RunAsync(roomNumber, capture: false);
+    public Task<PhotoResult> PickPhotoAsync(string label) => RunAsync(label, capture: false);
 
-    private async Task<PhotoResult> RunAsync(string roomNumber, bool capture)
+    private async Task<PhotoResult> RunAsync(string label, bool capture)
     {
         var action = capture ? "зйомку" : "вибір фото з галереї";
 
@@ -50,7 +50,7 @@ public class PhotoService : IPhotoService
                 return new PhotoResult(PhotoStatus.Cancelled);
             }
 
-            var path = await CopyToAppDataAsync(photo, roomNumber);
+            var path = await CopyToAppDataAsync(photo, label);
             _logger.LogInformation("Фото скопійовано в каталог застосунку: {FileName}", Path.GetFileName(path));
             return new PhotoResult(PhotoStatus.Success, path);
         }
@@ -72,10 +72,10 @@ public class PhotoService : IPhotoService
     }
 
     // У базі зберігається лише шлях до файла, а не самі байти зображення
-    private static async Task<string> CopyToAppDataAsync(FileResult photo, string roomNumber)
+    private static async Task<string> CopyToAppDataAsync(FileResult photo, string label)
     {
         var invalid = Path.GetInvalidFileNameChars();
-        var safeRoom = new string(roomNumber.Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();
+        var safeRoom = new string(label.Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();
         if (safeRoom.Length == 0)
             safeRoom = "unknown";
 
@@ -86,7 +86,7 @@ public class PhotoService : IPhotoService
         var directory = Path.Combine(FileSystem.AppDataDirectory, "photos");
         Directory.CreateDirectory(directory);
 
-        var target = Path.Combine(directory, $"room_{safeRoom}_{DateTime.Now:yyyyMMdd_HHmmss}{extension}");
+        var target = Path.Combine(directory, $"receipt_{safeRoom}_{DateTime.Now:yyyyMMdd_HHmmss}{extension}");
 
         await using var source = await photo.OpenReadAsync();
         await using var destination = File.Create(target);

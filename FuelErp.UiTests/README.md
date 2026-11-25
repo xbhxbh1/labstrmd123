@@ -1,8 +1,8 @@
 # UI-тести (Appium)
 
-Дві групи сценаріїв: «вхід у систему» і «створення нового запису» (`UserScenariosTests`).
+Дві групи сценаріїв: «вхід у систему» (дві ролі) і «створення нового запису» (додавання транспортного засобу) (`UserScenariosTests`).
 Елементи шукаються за `AutomationId`, який задано в XAML (`LoginEntry`, `PasswordEntry`, `LoginButton`,
-`FullNameEntry`, `GroupEntry`, `AddStudentButton`, `StudentsCollection`, ...).
+`PlateEntry`, `ModelEntry`, `AddVehicleButton`, `VehiclesCollection`, ...).
 
 За замовчуванням тести **пропускаються** (звичайний `dotnet test` і CI їх не виконують).
 

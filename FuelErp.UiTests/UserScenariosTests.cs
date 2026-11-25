@@ -3,7 +3,7 @@ using FluentAssertions;
 namespace FuelErp.UiTests;
 
 /// <summary>
-/// Два користувацькі сценарії з методички: «вхід у систему» і «створення нового запису».
+/// Користувацькі сценарії: «вхід у систему» (за двома ролями) і «створення нового запису».
 /// Перед запуском потрібен тестовий сервер (stub/FuelErp.StubApi) і Appium-сервер.
 /// </summary>
 public class UserScenariosTests : IDisposable
@@ -15,38 +15,47 @@ public class UserScenariosTests : IDisposable
     public void Dispose() => _session?.Dispose();
 
     [UiFact]
-    public void Login_WithValidCredentials_OpensMainPageForTheAdministrator()
+    public void Login_AsOperator_ShowsTheNewRefuelingButtonButNotTheAccountantScreens()
     {
-        Session.LoginAsAdministrator();
+        Session.LoginAsOperator();
 
-        var currentUser = Session.WaitFor("CurrentUserLabel");
-        currentUser.Text.Should().Contain("admin");
-        Session.WaitFor("ManageUsersButton").Displayed.Should().BeTrue(
-            "кнопку «Керування користувачами» бачить лише адміністратор");
+        Session.WaitFor("CurrentUserLabel").Text.Should().Contain("operator");
+        Session.IsShown("NewRefuelingButton").Should().BeTrue("оператор реєструє заправки");
+        Session.IsShown("ReportButton").Should().BeFalse("звіт бачить лише бухгалтер");
+        Session.IsShown("StaffButton").Should().BeFalse();
+    }
+
+    [UiFact]
+    public void Login_AsAccountant_ShowsTheReportButNotTheNewRefuelingButton()
+    {
+        Session.LoginAsAccountant();
+
+        Session.WaitFor("CurrentUserLabel").Text.Should().Contain("accountant");
+        Session.IsShown("ReportButton").Should().BeTrue();
+        Session.IsShown("StaffButton").Should().BeTrue();
+        Session.IsShown("NewRefuelingButton").Should().BeFalse("бухгалтер не реєструє заправки");
     }
 
     [UiFact]
     public void Login_WithWrongPassword_ShowsErrorAndStaysOnLoginPage()
     {
-        Session.WaitFor("LoginEntry").SendKeys("admin");
-        Session.ById("PasswordEntry").SendKeys("wrong-password");
-        Session.ById("LoginButton").Click();
+        Session.Login("operator", "wrong-password");
 
         Session.WaitFor("LoginErrorLabel").Text.Should().NotBeNullOrEmpty();
+        Session.IsShown("CurrentUserLabel").Should().BeFalse();
     }
 
     [UiFact]
-    public void CreateStudent_AddsANewRecordToTheList()
+    public void CreateVehicle_AddsANewRecordToTheList()
     {
-        Session.LoginAsAdministrator();
-        var name = $"Тестовий Студент {DateTime.Now:HHmmss}";
+        Session.LoginAsOperator();
+        var plate = $"ТЕ{DateTime.Now:HHmm}ТТ";
 
-        var fullName = Session.WaitFor("FullNameEntry");
-        fullName.SendKeys(name);
-        Session.ById("GroupEntry").SendKeys("КН-31");
-        Session.ById("AddStudentButton").Click();
+        Session.WaitFor("VehiclesButton").Click();
+        Session.WaitFor("PlateEntry").SendKeys(plate);
+        Session.ById("ModelEntry").SendKeys("Тестовий автомобіль");
+        Session.ById("AddVehicleButton").Click();
 
-        var list = Session.WaitFor("StudentsCollection");
-        list.Text.Should().Contain(name);
+        Session.WaitFor("VehiclesCollection").Text.Should().Contain(plate);
     }
 }

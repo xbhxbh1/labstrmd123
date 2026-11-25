@@ -1,4 +1,4 @@
-﻿using FuelErp.Views;
+using FuelErp.Views;
 
 namespace FuelErp;
 
@@ -7,14 +7,15 @@ public partial class AppShell : Shell
     public AppShell()
     {
         InitializeComponent();
-        Routing.RegisterRoute("studentdetail", typeof(StudentDetailPage));
+
+        // Маршрути модуля: список → картка → форма редагування
+        Routing.RegisterRoute("refueling/detail", typeof(RefuelingDetailPage));
+        Routing.RegisterRoute("refueling/edit", typeof(RefuelingEditPage));
+        Routing.RegisterRoute("tanks", typeof(TanksPage));
+        Routing.RegisterRoute("vehicles", typeof(VehiclesPage));
+        Routing.RegisterRoute("report", typeof(ReportPage));
+        Routing.RegisterRoute("users", typeof(UsersPage));
         Routing.RegisterRoute("settings", typeof(SettingsPage));
         Routing.RegisterRoute("logs", typeof(LogsPage));
-        Routing.RegisterRoute("users", typeof(UsersPage));
-        Routing.RegisterRoute("inspections", typeof(InspectionsPage));
-        Routing.RegisterRoute("inspection/new", typeof(InspectionEditPage));
-        Routing.RegisterRoute("inspection/detail", typeof(InspectionDetailPage));
-        Routing.RegisterRoute("inspections/map", typeof(InspectionsMapPage));
-        Routing.RegisterRoute("incident/new", typeof(InspectionEditPage));
     }
 }

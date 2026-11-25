@@ -8,7 +8,7 @@ public partial class MainPage : ContentPage, IQueryAttributable
 {
     private readonly ILogger<MainPage> _logger;
 
-    public MainPage(StudentViewModel viewModel, ILogger<MainPage> logger)
+    public MainPage(RefuelingsViewModel viewModel, ILogger<MainPage> logger)
     {
         InitializeComponent();
         BindingContext = viewModel;
@@ -27,7 +27,7 @@ public partial class MainPage : ContentPage, IQueryAttributable
         base.OnAppearing();
         _logger.LogInformation("Життєвий цикл сторінки: MainPage.OnAppearing");
 
-        if (BindingContext is StudentViewModel vm)
+        if (BindingContext is RefuelingsViewModel vm)
             vm.LoadCommand.Execute(null);
     }
 

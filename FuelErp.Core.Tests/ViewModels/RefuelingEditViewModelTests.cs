@@ -374,3 +374,28 @@ public class RefuelingEditViewModelTests
         _dialogs.Verify(d => d.AlertAsync("Помилка", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
 }
+
+public class RefuelingEditViewModelReloadTests
+{
+    [Fact]
+    public async Task Load_CalledAgain_DoesNotOverwriteWhatTheOperatorTyped()
+    {
+        var vehicles = new Mock<IVehicleRepository>();
+        vehicles.Setup(v => v.GetAllAsync()).ReturnsAsync(new List<Vehicle> { new() { Id = 1, PlateNumber = "АА1234КК", FuelType = FuelType.Diesel } });
+        var tanks = new Mock<ITankRepository>();
+        tanks.Setup(t => t.GetAllAsync()).ReturnsAsync(new List<FuelTank> { new() { Id = 10, Name = "Т", FuelType = FuelType.Diesel, CapacityLiters = 100, CurrentLiters = 100 } });
+        var state = new Mock<IAppStateService>();
+        state.SetupProperty(s => s.Draft, null);
+        var vm = new RefuelingEditViewModel(new Mock<IRefuelingRepository>().Object, vehicles.Object, tanks.Object,
+            new Mock<IPhotoService>().Object, new Mock<IDeviceLocationService>().Object, state.Object,
+            new Mock<ISessionService>().Object, new Mock<INavigationService>().Object, new Mock<IDialogService>().Object,
+            NullLogger<RefuelingEditViewModel>.Instance);
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.DriverName = "Введено вручну";
+
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.DriverName.Should().Be("Введено вручну");
+        vehicles.Verify(v => v.GetAllAsync(), Times.Once);
+    }
+}

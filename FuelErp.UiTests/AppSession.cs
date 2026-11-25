@@ -12,8 +12,10 @@ namespace FuelErp.UiTests;
 /// </summary>
 public sealed class AppSession : IDisposable
 {
-    public const string AdminLogin = "admin";
-    public const string AdminPassword = "Admin#2024";
+    public const string OperatorLogin = "operator";
+    public const string OperatorPassword = "Operator#2024";
+    public const string AccountantLogin = "accountant";
+    public const string AccountantPassword = "Accountant#2024";
 
     public WindowsDriver Driver { get; }
 
@@ -40,20 +42,34 @@ public sealed class AppSession : IDisposable
 
     public IWebElement ById(string automationId) => Driver.FindElement(MobileBy.AccessibilityId(automationId));
 
+    public bool IsShown(string automationId) =>
+        Driver.FindElements(MobileBy.AccessibilityId(automationId)).Any(e => e.Displayed);
+
     public IWebElement WaitFor(string automationId) =>
         Wait.Until(d => d.FindElements(MobileBy.AccessibilityId(automationId)).FirstOrDefault(e => e.Displayed))!;
 
-    public void LoginAsAdministrator()
+    public void Login(string login, string password)
     {
-        var login = WaitFor("LoginEntry");
-        login.Clear();
-        login.SendKeys(AdminLogin);
+        var loginEntry = WaitFor("LoginEntry");
+        loginEntry.Clear();
+        loginEntry.SendKeys(login);
 
-        var password = ById("PasswordEntry");
-        password.Clear();
-        password.SendKeys(AdminPassword);
+        var passwordEntry = ById("PasswordEntry");
+        passwordEntry.Clear();
+        passwordEntry.SendKeys(password);
 
         ById("LoginButton").Click();
+    }
+
+    public void LoginAsOperator()
+    {
+        Login(OperatorLogin, OperatorPassword);
+        WaitFor("CurrentUserLabel");
+    }
+
+    public void LoginAsAccountant()
+    {
+        Login(AccountantLogin, AccountantPassword);
         WaitFor("CurrentUserLabel");
     }
 

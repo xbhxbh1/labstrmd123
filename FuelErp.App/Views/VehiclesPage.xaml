@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FuelErp.Views.VehiclesPage"
+             Title="Транспортні засоби">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Padding="16" RowSpacing="8">
+        <Label Text="Транспортні засоби"
+               FontSize="22"
+               FontAttributes="Bold" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,200,Auto" ColumnSpacing="8">
+            <Entry Placeholder="Номер (АА1234КК)"
+                   Text="{Binding NewPlate, Mode=TwoWay}"
+                   AutomationId="PlateEntry" />
+            <Entry Grid.Column="1"
+                   Placeholder="Модель"
+                   Text="{Binding NewModel, Mode=TwoWay}"
+                   AutomationId="ModelEntry" />
+            <Picker Grid.Column="2"
+                    Title="Паливо"
+                    ItemsSource="{Binding FuelTypes}"
+                    ItemDisplayBinding="{Binding Name}"
+                    SelectedItem="{Binding NewFuelType, Mode=TwoWay}"
+                    AutomationId="VehicleFuelPicker" />
+            <Button Grid.Column="3"
+                    Text="Додати"
+                    Command="{Binding AddVehicleCommand}"
+                    AutomationId="AddVehicleButton" />
+        </Grid>
+
+        <Label Grid.Row="2"
+               Text="{Binding Status}"
+               AutomationId="VehiclesStatusLabel" />
+
+        <CollectionView Grid.Row="3"
+                        ItemsSource="{Binding Vehicles}"
+                        AutomationId="VehiclesCollection">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="0,6">
+                        <Label Text="{Binding DisplayName}" FontAttributes="Bold" />
+                        <Label Text="{Binding FuelType}" FontSize="12" Opacity="0.7" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button Grid.Row="4"
+                Text="Назад"
+                Command="{Binding GoBackCommand}"
+                AutomationId="BackButton" />
+    </Grid>
+</ContentPage>

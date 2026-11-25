@@ -3,9 +3,9 @@ using FuelErp.ViewModels;
 
 namespace FuelErp.Views;
 
-public partial class InspectionEditPage : ContentPage, IQueryAttributable
+public partial class RefuelingEditPage : ContentPage, IQueryAttributable
 {
-    public InspectionEditPage(InspectionEditViewModel viewModel)
+    public RefuelingEditPage(RefuelingEditViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
@@ -15,5 +15,13 @@ public partial class InspectionEditPage : ContentPage, IQueryAttributable
     {
         if (BindingContext is IQueryReceiver receiver)
             receiver.ApplyQuery(query);
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (BindingContext is RefuelingEditViewModel vm)
+            vm.LoadCommand.Execute(null);
     }
 }

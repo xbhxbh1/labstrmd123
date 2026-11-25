@@ -26,7 +26,7 @@
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
 
     <!-- Display name -->
-    <ApplicationTitle>FuelErp</ApplicationTitle>
+    <ApplicationTitle>Облік палива</ApplicationTitle>
 
     <!-- App Identifier -->
     <ApplicationId>com.companyname.fuelerp</ApplicationId>
@@ -64,7 +64,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
-    <PackageReference Include="Microsoft.Maui.Controls.Maps" Version="$(MauiVersion)" />
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
