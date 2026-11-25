@@ -66,11 +66,26 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      # На windows-latest попередньо встановлено новіші SDK: без цього `dotnet` обирає найновіший, а потрібен .NET 8
+      - name: Use the .NET 8 SDK for the Android build
+        run: |
+          '{ "sdk": { "version": "8.0.100", "rollForward": "latestFeature" } }' | Set-Content -Path global.json
+          dotnet --version
+
       - name: Install the MAUI Android workload
         run: dotnet workload install maui-android
 
       - name: Build the Android version
-        run: dotnet build FuelErp.App/FuelErp.App.csproj -f net8.0-android -c Release -p:IncludeAndroid=true
+        run: |
+          dotnet build FuelErp.App/FuelErp.App.csproj -f net8.0-android -c Release -p:IncludeAndroid=true -v:minimal 2>&1 | Tee-Object -FilePath build.log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            # рядки з помилками виводяться як анотації запуску, щоб причину було видно без перегляду повного журналу
+            Select-String -Path build.log -Pattern '(?i)(:\s*error\s)|(\berror\s+[A-Z]+\d+)' |
+              ForEach-Object { $_.Line.Trim() } | Select-Object -Unique -First 8 |
+              ForEach-Object { Write-Host ("::error::" + $_.Substring(0, [Math]::Min(400, $_.Length))) }
+          }
+          exit $code
 
       - name: Publish the installable Android package (.apk)
         run: dotnet publish FuelErp.App/FuelErp.App.csproj -f net8.0-android -c Release -p:IncludeAndroid=true -p:AndroidPackageFormat=apk -o ./apk
