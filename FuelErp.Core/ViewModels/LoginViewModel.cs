@@ -103,7 +103,7 @@ public partial class LoginViewModel : ObservableObject
 
         try
         {
-            var verified = await _biometrics.AuthenticateAsync("Підтвердьте особу для входу до кабінету студента");
+            var verified = await _biometrics.AuthenticateAsync("Підтвердьте особу для входу до обліку палива");
             if (!verified)
             {
                 ErrorMessage = "Біометричну перевірку не пройдено.";

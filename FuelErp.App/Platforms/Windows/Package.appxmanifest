@@ -48,7 +48,7 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
-    <!-- Лабораторна робота 7: камера (фото дефекту) і геолокація (місце огляду) -->
+    <!-- Лабораторна робота 7: камера (фото чека або лічильника) і геолокація (точка заправки) -->
     <DeviceCapability Name="webcam" />
     <DeviceCapability Name="location" />
   </Capabilities>

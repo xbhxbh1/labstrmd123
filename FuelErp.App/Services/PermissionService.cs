@@ -31,7 +31,7 @@ public class PermissionService : IPermissionService
         {
             _logger.LogInformation("Показано пояснення (rationale) для дозволу {Permission}", name);
             await Shell.Current.DisplayAlert("Потрібен дозвіл",
-                "Дозвіл потрібен для фіксації акта огляду аудиторії: фото дефекту та місця огляду.", "OK");
+                "Дозвіл потрібен для фіксації заправки: фото чека або лічильника та місця заправки.", "OK");
         }
 
         status = await Permissions.RequestAsync<TPermission>();
